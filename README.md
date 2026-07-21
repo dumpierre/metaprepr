@@ -79,7 +79,7 @@ dataprepr/
 
 ## License
 
-MIT (see LICENSE - TODO: add license file before public release).
+MIT - see `LICENSE`.
 
 ## Citing
 
