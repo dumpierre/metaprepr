@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataPrepR — convert reported statistics into meta-analysis-ready data</title>
+<meta name="description" content="A toolkit for converting medians, ranges, IQRs, SEs and CIs into mean/SD for meta-analysis, following the Cochrane Handbook and Hozo/Wan/Luo methods.">
+<style>
+  :root {
+    --paper: #f7f5ef;
+    --paper-raised: #fffdf8;
+    --grid-line: #ddd6c4;
+    --ink: #1b2a4a;
+    --ink-soft: #445070;
+    --amber: #b8712a;
+    --amber-deep: #93591f;
+    --teal: #2f6f62;
+    --teal-soft: #e4ede9;
+    --rule: #cfc7ae;
+    --radius: 3px;
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #14181f;
+    --paper-raised: #1c212b;
+    --grid-line: #2a3038;
+    --ink: #e9e6db;
+    --ink-soft: #b7bccb;
+    --amber: #d99a4e;
+    --amber-deep: #e8b26f;
+    --teal: #6ab5a3;
+    --teal-soft: #1d2b28;
+    --rule: #333a44;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14181f;
+      --paper-raised: #1c212b;
+      --grid-line: #2a3038;
+      --ink: #e9e6db;
+      --ink-soft: #b7bccb;
+      --amber: #d99a4e;
+      --amber-deep: #e8b26f;
+      --teal: #6ab5a3;
+      --teal-soft: #1d2b28;
+      --rule: #333a44;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 100% 32px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 32px 100%,
+      var(--paper);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--amber); color: #fff; }
+
+  a { color: var(--teal); }
+  a:focus-visible, button:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 3px;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+
+  .display {
+    font-family: "Iowan Old Style", Georgia, "Times New Roman", serif;
+  }
+
+  .mono {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+  }
+
+  /* ---- header ---------------------------------------------------- */
+
+  header.site {
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  header.site .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .wordmark {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .wordmark .tag {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin-top: 0.15rem;
+  }
+  nav.site-nav { display: flex; gap: 1.4rem; align-items: center; font-size: 0.92rem; }
+  nav.site-nav a { text-decoration: none; color: var(--ink-soft); }
+  nav.site-nav a:hover { color: var(--ink); }
+
+  .btn {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--amber);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--amber-deep); }
+  .btn-ghost {
+    border-color: var(--rule);
+    color: var(--ink);
+  }
+  .btn-ghost:hover { border-color: var(--ink-soft); }
+
+  /* ---- hero -------------------------------------------------------- */
+
+  section.hero { padding: 4.5rem 0 3.5rem; }
+  .hero h1 {
+    font-size: clamp(1.9rem, 4vw, 2.7rem);
+    line-height: 1.15;
+    margin: 0 0 1rem;
+    max-width: 18ch;
+  }
+  .hero h1 em { color: var(--amber-deep); font-style: italic; }
+  .hero .lede {
+    max-width: 52ch;
+    color: var(--ink-soft);
+    font-size: 1.08rem;
+    margin: 0 0 2.25rem;
+  }
+
+  .ledger {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 720px;
+    margin-bottom: 2.25rem;
+  }
+  .ledger-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1rem 1.15rem;
+  }
+  .ledger-card .eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.6rem;
+  }
+  .ledger-card dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.3rem 0.9rem;
+    font-size: 0.95rem;
+  }
+  .ledger-card dt { color: var(--ink-soft); }
+  .ledger-card dd { margin: 0; text-align: right; }
+  .ledger-card.out { border-color: var(--teal); }
+  .ledger-card.out .eyebrow { color: var(--teal); }
+
+  .ledger-arrow {
+    color: var(--amber);
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .hero .cta-row { display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; }
+  .hero .cta-row .btn-primary { font-size: 0.98rem; padding: 0.7rem 1.4rem; }
+
+  /* ---- methods grid -------------------------------------------------- */
+
+  section.methods { padding: 3rem 0; border-top: 1px solid var(--rule); }
+  section.methods h2 { font-size: 1.5rem; margin: 0 0 0.4rem; }
+  section.methods > .wrap > p.section-lede {
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0 0 2rem;
+  }
+
+  .method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .method-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.2rem;
+  }
+  .method-card h3 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+  }
+  .method-card .formula {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--teal);
+    background: var(--teal-soft);
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--radius);
+    margin-bottom: 0.6rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .method-card .cite {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+
+  /* ---- how it works -------------------------------------------------- */
+
+  section.flow { padding: 3rem 0; border-top: 1px solid var(--rule); }
+  section.flow h2 { font-size: 1.5rem; margin: 0 0 2rem; }
+  .flow-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+  .flow-step { position: relative; padding-left: 2.6rem; }
+  .flow-step .num {
+    position: absolute;
+    left: 0; top: 0.05rem;
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--amber-deep);
+    border: 1px solid var(--amber);
+    border-radius: 50%;
+    width: 1.9rem; height: 1.9rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .flow-step h3 { font-size: 1rem; margin: 0 0 0.35rem; }
+  .flow-step p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
+
+  /* ---- trust strip -------------------------------------------------- */
+
+  section.trust { padding: 2.5rem 0 3.5rem; border-top: 1px solid var(--rule); }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .badge {
+    font-size: 0.8rem;
+    background: var(--teal-soft);
+    color: var(--teal);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+  }
+
+  /* ---- footer -------------------------------------------------------- */
+
+  footer.site {
+    border-top: 1px solid var(--rule);
+    padding: 2rem 0 3rem;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+  }
+  footer.site .links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  footer.site a { color: var(--ink-soft); }
+  footer.site a:hover { color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .ledger { grid-template-columns: 1fr; }
+    .ledger-arrow { transform: rotate(90deg); justify-self: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="wordmark display">DataPrepR
+      <span class="tag mono">median → mean · IQR → SD · Cochrane-aligned</span>
+    </div>
+    <nav class="site-nav">
+      <a href="user-guide.md">User guide</a>
+      <a href="methods.md">Methods</a>
+      <a href="#" class="btn btn-primary" aria-label="Launch the DataPrepR app (placeholder link)">Launch app</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <h1 class="display">Your studies report <em>medians</em>.<br>Your meta-analysis needs <em>means</em>.</h1>
+      <p class="lede">DataPrepR converts what trials actually publish — medians, ranges, IQRs,
+        standard errors, confidence intervals — into the mean and SD your synthesis needs,
+        using methods validated against the Cochrane Handbook and the Hozo/Wan/Luo
+        literature.</p>
+
+      <div class="ledger">
+        <div class="ledger-card mono">
+          <div class="eyebrow">as reported</div>
+          <dl>
+            <dt>median</dt><dd>5.20</dd>
+            <dt>IQR</dt><dd>3.10–8.40</dd>
+            <dt>n</dt><dd>64</dd>
+          </dl>
+        </div>
+        <div class="ledger-arrow" aria-hidden="true">&#10142;</div>
+        <div class="ledger-card out mono">
+          <div class="eyebrow">ready for synthesis</div>
+          <dl>
+            <dt>mean</dt><dd>5.10</dd>
+            <dt>sd</dt><dd>3.89</dd>
+            <dt>n</dt><dd>64</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a href="#" class="btn btn-primary">Launch app &rarr;</a>
+        <a href="methods.md">Read the methods reference</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="methods" id="methods">
+    <div class="wrap">
+      <h2 class="display">Seven tools, one workspace</h2>
+      <p class="section-lede">Every conversion tracks its method and inputs, so the audit
+        trail survives all the way to your final dataset.</p>
+      <div class="method-grid">
+
+        <div class="method-card">
+          <h3>SE &rarr; SD</h3>
+          <span class="formula mono">SD = SE &middot; &radic;n</span>
+          <span class="cite">Cochrane Handbook 6.5.2.3</span>
+        </div>
+
+        <div class="method-card">
+          <h3>95% CI &rarr; SD</h3>
+          <span class="formula mono">SE = (upper&minus;lower) / (2&middot;t)</span>
+          <span class="cite">Cochrane Handbook 6.5.2.3 &middot; t or z</span>
+        </div>
+
+        <div class="method-card">
+          <h3>IQR &rarr; SD</h3>
+          <span class="formula mono">SD = (Q3&minus;Q1) / 1.35</span>
+          <span class="cite">Normal approximation</span>
+        </div>
+
+        <div class="method-card">
+          <h3>Median &rarr; Mean &amp; SD</h3>
+          <span class="formula mono">Hozo &middot; Wan &middot; Luo</span>
+          <span class="cite">Hozo 2005 &middot; Wan 2014 &middot; Luo 2016/2018</span>
+        </div>
+
+        <div class="method-card">
+          <h3>SD of change</h3>
+          <span class="formula mono">&radic;(SDb&sup2;+SDf&sup2;&minus;2r&middot;SDb&middot;SDf)</span>
+          <span class="cite">Cochrane Handbook 6.5.2.8</span>
+        </div>
+
+        <div class="method-card">
+          <h3>Combine groups</h3>
+          <span class="formula mono">weighted mean + pooled SD</span>
+          <span class="cite">Cochrane Handbook Table 6.5.a</span>
+        </div>
+
+        <div class="method-card">
+          <h3>Split shared control</h3>
+          <span class="formula mono">n_adj = round(n / k)</span>
+          <span class="cite">Cochrane Handbook 23.3.4</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="flow" id="how-it-works">
+    <div class="wrap">
+      <h2 class="display">How it works</h2>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <span class="num mono">1</span>
+          <h3>Enter what you have</h3>
+          <p>Whatever your source reports — median and range, Q1/Q3, SE, or a 95% CI.
+            Irrelevant fields hide themselves.</p>
+        </div>
+        <div class="flow-step">
+          <span class="num mono">2</span>
+          <h3>Pick a method</h3>
+          <p>The app tells you which scenario it detected (S1/S2/S3) and defaults to the
+            method the literature recommends.</p>
+        </div>
+        <div class="flow-step">
+          <span class="num mono">3</span>
+          <h3>Export your workspace</h3>
+          <p>Every result lands in one editable table. Download as CSV or XLSX when your
+            dataset is ready.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust">
+    <div class="wrap">
+      <div class="badges">
+        <span class="badge mono">86/86 unit tests passing</span>
+        <span class="badge mono">Cross-validated vs. estmeansd</span>
+        <span class="badge mono">Cochrane Handbook aligned</span>
+        <span class="badge mono">Wan/Luo via metaBLUE</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="links">
+      <a href="user-guide.md">User guide</a>
+      <a href="methods.md">Methods reference</a>
+      <a href="../paper/paper.md">Software paper (draft)</a>
+      <a href="#">Source (placeholder)</a>
+    </div>
+    <p>DataPrepR is MIT-licensed research software. Formulas are cited to their original
+      sources throughout — see the methods reference before relying on any single estimate.</p>
+  </div>
+</footer>
+
+</body>
+</html>
