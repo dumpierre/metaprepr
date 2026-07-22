@@ -83,4 +83,4 @@ MIT - see `LICENSE`.
 
 ## Citing
 
-See `paper/paper.md` and `paper/references.bib` (draft; authorship TODO).
+See `paper/paper.md` and `paper/references.bib` 

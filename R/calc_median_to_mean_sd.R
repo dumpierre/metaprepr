@@ -18,6 +18,11 @@
 # source (Wan et al. 2014, BMC Med Res Methodol 14:135; Luo et al. 2016,
 # Stat Methods Med Res) and cross-checked against the metaBLUE source code
 # shipped inside estmeansd's own bc.mean.sd() implementation.
+#
+# The internal scenario codes "S1"/"S2"/"S3" below are matched literally in
+# switch() statements throughout this file and in app_server.R - they must
+# not be renamed. Only their translated display label (see scenario_labels
+# in R/translations.R) changes between languages.
 
 #' Determine which of S1/S2/S3 a set of inputs corresponds to
 #'
@@ -41,12 +46,12 @@ calc_hozo <- function(min_val, med_val, max_val, n) {
   validation <- validate_inputs(
     values = list(min_val = min_val, med_val = med_val, max_val = max_val, n = n),
     rules = list(n = function(v) v >= 1),
-    labels = list(min_val = "minimum", med_val = "median", max_val = "maximum", n = "n")
+    labels = list(min_val = "min_val", med_val = "med_val", max_val = "max_val", n = "n")
   )
   if (!validation$ok) return(c(validation, list(mean = NA_real_, sd = NA_real_)))
 
   if (max_val < min_val || med_val < min_val || med_val > max_val) {
-    return(list(ok = FALSE, message = "Require min <= median <= max.",
+    return(list(ok = FALSE, code = "hozo_order", args = NULL,
                 mean = NA_real_, sd = NA_real_))
   }
 
@@ -62,7 +67,7 @@ calc_hozo <- function(min_val, med_val, max_val, n) {
     (b - a) / 6
   }
 
-  list(ok = TRUE, message = "", mean = est_mean, sd = est_sd)
+  list(ok = TRUE, code = "", args = NULL, mean = est_mean, sd = est_sd)
 }
 
 #' Bland's "simple" mean estimator, conventionally paired with Wan (2014) SD
@@ -90,9 +95,7 @@ calc_wan_luo <- function(min_val, q1_val, med_val, q3_val, max_val, n,
   scenario <- detect_scenario(min_val, q1_val, med_val, q3_val, max_val)
   if (is.na(scenario)) {
     return(list(
-      ok = FALSE,
-      message = paste0("Provide either {min, median, max, n} (S1), ",
-                        "{Q1, median, Q3, n} (S2), or all five plus n (S3)."),
+      ok = FALSE, code = "median_scenario_not_detected", args = NULL,
       mean = NA_real_, sd = NA_real_, scenario = NA_character_
     ))
   }
@@ -109,7 +112,7 @@ calc_wan_luo <- function(min_val, q1_val, med_val, q3_val, max_val, n,
     S3 = c(min_val, q1_val, med_val, q3_val, max_val)
   )
   if (is.unsorted(quants)) {
-    return(list(ok = FALSE, message = "Quantiles must be non-decreasing (min <= Q1 <= median <= Q3 <= max).",
+    return(list(ok = FALSE, code = "median_quantiles_unsorted", args = NULL,
                 mean = NA_real_, sd = NA_real_, scenario = scenario))
   }
 
@@ -120,7 +123,7 @@ calc_wan_luo <- function(min_val, q1_val, med_val, q3_val, max_val, n,
     simple_mean_estimate(min_val, q1_val, med_val, q3_val, max_val, scenario)
   }
 
-  list(ok = TRUE, message = "", mean = as.numeric(est_mean), sd = as.numeric(est_sd),
+  list(ok = TRUE, code = "", args = NULL, mean = as.numeric(est_mean), sd = as.numeric(est_sd),
        scenario = scenario)
 }
 

@@ -1,4 +1,5 @@
 source(file.path("..", "..", "R", "utils_validation.R"))
+source(file.path("..", "..", "R", "translations.R"))
 source(file.path("..", "..", "R", "calc_se_to_sd.R"))
 source(file.path("..", "..", "R", "calc_ci_to_sd.R"))
 source(file.path("..", "..", "R", "calc_iqr_to_sd.R"))
@@ -298,4 +299,41 @@ test_that("Split control: n_adjusted = round(n_control / k)", {
 test_that("Split control: rejects k < 2 and non-integer k", {
   expect_false(split_control(n_control = 100, k = 1)$ok)
   expect_false(split_control(n_control = 100, k = 2.5)$ok)
+})
+
+# ---------------------------------------------------------------------------
+# Message-code regression guard (calculators return codes, not English
+# prose, so translation can happen at display time - see R/translations.R)
+# ---------------------------------------------------------------------------
+
+test_that("Every failure path returns a non-empty code and ok=FALSE", {
+  failing_results <- list(
+    calc_se_to_sd(se = -1, n = 10),
+    calc_ci_to_sd(lower = 60, upper = 40, n = 10),
+    calc_iqr_to_sd(q1 = 20, q3 = 10),
+    calc_median_to_mean_sd(min_val = 10, med_val = 5, max_val = 20, n = 30, method = "hozo"),
+    calc_median_to_mean_sd(min_val = 2, med_val = 5, n = 30, method = "wan"),
+    calc_sd_change(sd_base = 3, sd_final = 4, r = 1.5),
+    combine_groups(n = c(10), mean = c(5), sd = c(1)),
+    split_control(n_control = 100, k = 1)
+  )
+  for (res in failing_results) {
+    expect_false(res$ok)
+    expect_true(is.character(res$code) && nzchar(res$code))
+  }
+})
+
+test_that("render_message() produces non-empty text in English and Portuguese", {
+  res <- calc_iqr_to_sd(q1 = 20, q3 = 10)
+  msg_en <- render_message(res$code, res$args, "en")
+  msg_pt <- render_message(res$code, res$args, "pt")
+  expect_true(nzchar(msg_en))
+  expect_true(nzchar(msg_pt))
+  expect_false(identical(msg_en, msg_pt))
+
+  res2 <- calc_se_to_sd(se = 2, n = 0)
+  msg2_en <- render_message(res2$code, res2$args, "en")
+  msg2_pt <- render_message(res2$code, res2$args, "pt")
+  expect_true(grepl("n", msg2_en))
+  expect_true(nzchar(msg2_pt))
 })

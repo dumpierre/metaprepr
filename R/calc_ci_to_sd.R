@@ -11,19 +11,19 @@
 #' @param upper upper bound of the 95% CI (must be >= lower)
 #' @param n sample size (>= 2)
 #' @param crit_method "t" (default, exact) or "z" (approximate, uses 1.96)
-#' @return list(ok, message, sd, t_or_z)
+#' @return list(ok, code, args, sd, t_or_z)
 calc_ci_to_sd <- function(lower, upper, n, crit_method = c("t", "z")) {
   crit_method <- match.arg(crit_method)
 
   validation <- validate_inputs(
     values = list(lower = lower, upper = upper, n = n),
     rules = list(n = function(v) v >= 2),
-    labels = list(lower = "lower bound", upper = "upper bound", n = "n")
+    labels = list(lower = "lower_bound", upper = "upper_bound", n = "n")
   )
   if (!validation$ok) return(c(validation, list(sd = NA_real_, t_or_z = NA_real_)))
 
   if (upper < lower) {
-    return(list(ok = FALSE, message = "Upper bound must be >= lower bound.",
+    return(list(ok = FALSE, code = "ci_upper_lt_lower", args = NULL,
                 sd = NA_real_, t_or_z = NA_real_))
   }
 
@@ -31,5 +31,5 @@ calc_ci_to_sd <- function(lower, upper, n, crit_method = c("t", "z")) {
   se <- (upper - lower) / (2 * crit)
   sd <- se * sqrt(n)
 
-  list(ok = TRUE, message = "", sd = sd, t_or_z = crit)
+  list(ok = TRUE, code = "", args = NULL, sd = sd, t_or_z = crit)
 }
