@@ -7,7 +7,7 @@
 #'
 #' @param se standard error (>= 0)
 #' @param n sample size (>= 1)
-#' @return list(ok, message, sd)
+#' @return list(ok, code, args, sd)
 calc_se_to_sd <- function(se, n) {
   validation <- validate_inputs(
     values = list(se = se, n = n),
@@ -15,12 +15,12 @@ calc_se_to_sd <- function(se, n) {
       se = function(v) v >= 0,
       n = function(v) v >= 1
     ),
-    labels = list(se = "SE", n = "n")
+    labels = list(se = "se", n = "n")
   )
   if (!validation$ok) {
     return(c(validation, list(sd = NA_real_)))
   }
 
   sd <- se * sqrt(n)
-  list(ok = TRUE, message = "", sd = sd)
+  list(ok = TRUE, code = "", args = NULL, sd = sd)
 }
