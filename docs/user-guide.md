@@ -19,7 +19,7 @@ the right to review and export everything you've sent so far.
 2. Enter the SE and the sample size n.
 3. Click **Calculate**. The Result card shows the estimated SD.
 4. Optionally fill in Study ID / Group label for traceability, then click
-   **Send to Workspace**.
+   **Send to workspace**.
 
 ## Task: "My study reports mean and a 95% CI"
 
@@ -35,20 +35,20 @@ the right to review and export everything you've sent so far.
 1. Go to **Basic transforms -> IQR -> SD**.
 2. Enter Q1 and Q3.
 3. This gives a normal-approximation SD that ignores sample size. If the
-   study also reports n, prefer **Median -> Mean & SD** with the Wan or Luo
+   study also reports n, prefer **Median -> mean & SD** with the Wan or Luo
    method instead - it will use n and typically be more accurate.
 
 ## Task: "My study reports median, min/max, and/or Q1/Q3 (no mean/SD at all)"
 
-1. Go to **Median-based estimation -> Median -> Mean & SD**.
+1. Go to **Median-based estimation -> Median -> mean & SD**.
 2. Pick a method:
    - **Wan (2014)** (default) - good general-purpose choice.
    - **Hozo (2005)** - only if you have exactly min/median/max/n (no
      quartiles) and want the classic, simpler formula.
    - **Luo (2018) mean + Wan (2014) SD** - prefer this if you suspect the
      outcome is skewed (e.g., cost data, hospital length of stay, pain scores
-     bounded at zero). It's markedly more robust to skew than Wan's simple
-     mean (see `methods.md`, section 4).
+     bounded at zero). It stays markedly more accurate than Wan's simple
+     mean under skew (see `methods.md`, section 4).
 3. Fill in whichever of {min, Q1, median, Q3, max} your source reports, plus
    n. Fields irrelevant to the Hozo method are hidden automatically.
 4. Calculate. The Result card also shows which scenario (S1/S2/S3) was
@@ -57,7 +57,7 @@ the right to review and export everything you've sent so far.
 ## Task: "I need the SD of a change-from-baseline score, but only baseline and
 final SDs are reported"
 
-1. Go to **Meta-analysis adjustments -> SD of Change**.
+1. Go to **Meta-analysis adjustments -> SD of change**.
 2. Enter SD at baseline and SD at final measurement.
 3. Adjust the correlation slider if you have a study-specific estimate of r;
    otherwise leave it at Cochrane's default of 0.5.
@@ -69,7 +69,7 @@ final SDs are reported"
 
 ## Task: "I have two or more subgroups I need to combine into one group"
 
-1. Go to **Meta-analysis adjustments -> Combine Groups**.
+1. Go to **Meta-analysis adjustments -> Combine groups**.
 2. Edit the table directly: enter N, Mean, SD for each group. Right-click the
    table to add rows if you have more than 2 groups.
 3. Click **Calculate** to get the combined N, Mean, and SD.
@@ -77,10 +77,10 @@ final SDs are reported"
 
 ## Task: "Two comparisons in my meta-analysis share the same control group"
 
-1. Go to **Meta-analysis adjustments -> Split Shared Control**.
+1. Go to **Meta-analysis adjustments -> Split shared control**.
 2. Enter the control group's N and how many comparisons (k) share it.
    Optionally enter its mean/SD (passed through unchanged).
-3. Click **Calculate**, then **Send all k rows to Workspace** - this creates
+3. Click **Calculate**, then **Send all k rows to workspace** - this creates
    k rows, each with the adjusted N and a numbered group label
    (`control_1`, `control_2`, ...), ready to pair with each comparison's
    intervention arm.
