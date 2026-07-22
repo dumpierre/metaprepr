@@ -5,7 +5,7 @@ literature source. Implementations live in `R/calc_*.R`, `R/combine_groups.R`,
 and `R/split_control.R`; each has unit tests in
 `tests/testthat/test-calculations.R`.
 
-## 1. Standard Error -> Standard Deviation
+## 1. Standard error -> standard deviation
 
 **Formula:** SD = SE * sqrt(n)
 
@@ -15,7 +15,7 @@ n >= 1 and SE >= 0.
 **Source:** Cochrane Handbook for Systematic Reviews of Interventions, section
 6.5.2.3.
 
-## 2. 95% Confidence Interval (of a mean) -> Standard Deviation
+## 2. 95% confidence interval (of a mean) -> standard deviation
 
 **Formula:** df = n-1; crit = qt(0.975, df) (or 1.96 in z-mode); SE =
 (upper-lower)/(2*crit); SD = SE*sqrt(n)
@@ -30,7 +30,7 @@ source study used a fixed z-based CI.
 
 **Source:** Cochrane Handbook, section 6.5.2.3.
 
-## 3. Interquartile Range -> Standard Deviation
+## 3. Interquartile range -> standard deviation
 
 **Formula:** SD = (Q3 - Q1) / 1.35
 
@@ -43,7 +43,7 @@ it accounts for n.
 **Source:** Common normal-approximation heuristic; see Cochrane Handbook
 6.5.2.5 for discussion of range/IQR-based approximations.
 
-## 4. Median/Range/IQR -> Mean & Standard Deviation
+## 4. Median/range/IQR -> mean & standard deviation
 
 Three selectable methods, applied to one of three input scenarios:
 
@@ -117,7 +117,7 @@ Agreement is loose by design (different methodology), typically within 15-25%
 on moderately skewed data; any larger gap is printed during the test run for
 manual inspection.
 
-## 5. Standard Deviation of Change from Baseline
+## 5. Standard deviation of change from baseline
 
 **Formula:** SD_change = sqrt(SD_base^2 + SD_final^2 - 2*r*SD_base*SD_final)
 
@@ -130,7 +130,7 @@ readout at r in {0.3, 0.5, 0.7} is shown alongside the point estimate.
 **Source:** Cochrane Handbook, section 6.5.2.8. Cochrane's recommended default
 imputation is r = 0.5 when the true correlation is unknown.
 
-## 6. Combine Groups (k >= 2)
+## 6. Combine groups (k >= 2)
 
 **Formula:**
 - Combined N = sum(N_i)
@@ -144,7 +144,7 @@ and SD (to floating-point tolerance).
 
 **Source:** Cochrane Handbook, Table 6.5.a.
 
-## 7. Split a Shared Control Group
+## 7. Split a shared control group
 
 **Formula:** n_adjusted = round(n_control / k) for each of the k pairwise
 comparisons sharing the control group; mean and SD are unchanged.
