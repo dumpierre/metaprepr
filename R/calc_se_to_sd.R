@@ -1,6 +1,7 @@
 # SE -> SD
 #
-# Cochrane Handbook 6.5.2.3: SD = SE * sqrt(n)
+# Cochrane Handbook 6.5.2.2: SD = SE * sqrt(n)  (group means; 6.5.2.3 covers
+# differences in means and is not implemented here)
 # Guards: n >= 1, SE >= 0.
 
 #' Convert standard error to standard deviation

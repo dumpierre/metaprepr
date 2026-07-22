@@ -9,26 +9,36 @@ and `R/split_control.R`; each has unit tests in
 
 **Formula:** SD = SE * sqrt(n)
 
-**Assumptions:** SE is the standard error of the mean for a sample of size n;
-n >= 1 and SE >= 0.
+**Assumptions:** SE is the standard error of a *group mean* for a sample of
+size n; n >= 1 and SE >= 0. If the reported SE belongs to a *difference*
+between two means, this is the wrong formula: see Handbook 6.5.2.3, which
+covers that case separately and is not implemented here.
 
-**Source:** Cochrane Handbook for Systematic Reviews of Interventions, section
-6.5.2.3.
+**Source:** Cochrane Handbook for Systematic Reviews of Interventions (version
+6.5, 2024), section 6.5.2.2, "Obtaining standard deviations from standard
+errors and confidence intervals for group means".
 
 ## 2. 95% confidence interval (of a mean) -> standard deviation
 
 **Formula:** df = n-1; crit = qt(0.975, df) (or 1.96 in z-mode); SE =
 (upper-lower)/(2*crit); SD = SE*sqrt(n)
 
-**Assumptions:** The CI is a symmetric 95% CI for a mean (not a CI for a
-proportion, ratio, or other quantity). n >= 2. The t-distribution critical
-value is exact for this purpose; the z=1.96 approximation understates the true
-critical value for small n (e.g., t=2.78 vs z=1.96 at n=5), which will
-overstate the estimated SD if used incorrectly, or understate it if the
-original study actually used t but you assume z. Prefer t unless you know the
-source study used a fixed z-based CI.
+**Assumptions:** The CI is a symmetric 95% CI for a *group mean* (not for a
+difference between means, nor for a proportion, ratio, or other quantity).
+n >= 2. The t-distribution critical value is exact for this purpose; the
+z=1.96 approximation understates the true critical value for small n (e.g.,
+t=2.78 vs z=1.96 at n=5), which will overstate the estimated SD if used
+incorrectly, or understate it if the original study actually used t but you
+assume z. The Handbook advises that intervals for groups of fewer than about
+60 participants should have been computed from a t distribution, so prefer t
+unless you know the source study used a fixed z-based CI.
 
-**Source:** Cochrane Handbook, section 6.5.2.3.
+The Handbook's z-mode divisor is 3.92 for a 95% CI (2 x 1.96), 3.29 for a 90%
+CI and 5.15 for a 99% CI. Only the 95% case is implemented.
+
+**Source:** Cochrane Handbook, section 6.5.2.2. Section 6.5.2.3 covers the
+same recovery from statistics describing a *difference* in means, including
+from t statistics and P values, and is not implemented here.
 
 ## 3. Interquartile range -> standard deviation
 
@@ -40,8 +50,10 @@ the IQR of a standard normal distribution, i.e. qnorm(0.75)-qnorm(0.25) ~=
 entirely. When n is known, the Wan (2014) method (below) is preferable because
 it accounts for n.
 
-**Source:** Common normal-approximation heuristic; see Cochrane Handbook
-6.5.2.5 for discussion of range/IQR-based approximations.
+**Source:** Cochrane Handbook, section 6.5.2.5 ("Interquartile ranges"), which
+states that when sample sizes are large and the distribution is close to
+normal, the interquartile range is approximately 1.35 SDs, and cautions that
+the approximation is unreliable for skewed distributions.
 
 ## 4. Median/range/IQR -> mean & standard deviation
 
@@ -142,12 +154,30 @@ folding (combine groups 1+2, then fold in group 3, etc.). This is tested for
 order-invariance: combining in a different order produces the same N, Mean,
 and SD (to floating-point tolerance).
 
-**Source:** Cochrane Handbook, Table 6.5.a.
+**Source:** Cochrane Handbook, section 6.5.2.10 ("Combining groups") and
+Table 6.5.a ("Formulae for combining summary statistics across two groups").
 
 ## 7. Split a shared control group
 
-**Formula:** n_adjusted = round(n_control / k) for each of the k pairwise
-comparisons sharing the control group; mean and SD are unchanged.
+**Formula:** the control group's N is divided into k whole parts, one per
+pairwise comparison sharing it; mean and SD are unchanged. Two weightings
+are offered:
+
+- `"even"` (default, Cochrane): k approximately equal parts.
+- `"proportional"`: parts proportional to the sizes of the k intervention
+  arms, so a comparison against a larger arm draws a larger share.
+
+Both allocate integers by the largest-remainder (Hamilton) method: floor
+each exact share, then hand the leftover units to the shares with the
+largest discarded fraction.
+
+**Why not round each share independently:** independent rounding does not
+preserve the total. For n_control = 41 and k = 3, `round(41/3)` is 14, and
+14 x 3 allocates 42 participants from a control arm of 41 - inventing a
+participant and inflating the pooled precision. Largest-remainder gives
+14, 14, 13. An earlier version of this app used independent rounding; the
+test suite now guards the invariant `sum(n_adjusted) == n_control`
+explicitly.
 
 **Assumptions:** This is the simple Cochrane approximation used to avoid
 double-counting a shared control group's contribution when it appears in
@@ -157,4 +187,12 @@ comparisons. The rigorous alternative is a network meta-analysis or another
 multivariate method that explicitly accounts for the shared-control
 correlation structure.
 
-**Source:** Cochrane Handbook, section 23.3.4.
+Note the Handbook's own position: splitting the shared group "only partially
+overcomes the unit-of-analysis error (because the resulting comparisons remain
+correlated) so is not generally recommended". Its preferred approach is to
+combine all relevant experimental groups into one group and all relevant
+comparator groups into one group, i.e. section 6 above. Prefer that route
+unless the review question requires the arms to stay separate.
+
+**Source:** Cochrane Handbook, section 23.3.4 ("How to include multiple groups
+from one study").

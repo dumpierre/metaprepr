@@ -232,6 +232,16 @@ build_panels <- function(lang) {
           shiny::p(class = "text-muted", t("help_split")),
           shiny::numericInput("split_n", t("lbl_split_n"), value = NA, min = 1, step = 1),
           shiny::numericInput("split_k", t("lbl_split_k"), value = 2, min = 2, step = 1),
+          shiny::radioButtons(
+            "split_weighting", t("lbl_split_weighting"),
+            choices = stats::setNames(c("even", "proportional"),
+                                       c(t("choice_split_even"), t("choice_split_proportional"))),
+            selected = "even"
+          ),
+          shiny::conditionalPanel(
+            condition = "input.split_weighting == 'proportional'",
+            shiny::textInput("split_arm_n", t("lbl_split_arm_n"), value = "")
+          ),
           shiny::numericInput("split_mean", t("lbl_split_mean"), value = NA, step = 0.01),
           shiny::numericInput("split_sd", t("lbl_split_sd"), value = NA, min = 0, step = 0.01),
           shiny::div(class = "alert alert-info", t("alert_split")),

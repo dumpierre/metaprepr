@@ -46,12 +46,12 @@ ui_text <- list(
     card_workspace = "Workspace",
     card_result = "Result",
 
-    help_se = "SD = SE times the square root of n. Cochrane Handbook 6.5.2.3.",
+    help_se = "SD = SE times the square root of n. Cochrane Handbook 6.5.2.2.",
     help_ci = "Assumes a symmetric 95% CI for a mean. SE = (upper - lower) / (2 times the critical value); SD = SE times the square root of n.",
     help_iqr = "SD = (Q3 - Q1) / 1.35 (normal approximation).",
     help_sdchange = "SD_change = square root of (SD_base^2 + SD_final^2 - 2 * r * SD_base * SD_final)",
     help_combine = "Edit the table below (add rows for k > 2 groups), then combine.",
-    help_split = "n_adjusted = round(n_control / k); mean and SD stay unchanged.",
+    help_split = "The control N is divided into k whole parts that add back up to it exactly; mean and SD stay unchanged.",
     help_workspace = "Results sent from any calculator land here. Edit the table directly if needed.",
 
     help_hozo_fields = "Hozo needs minimum, median, maximum, and n (S1 only). The SD formula switches at n <= 15, n <= 70, and n > 70; the mean uses the full range formula for n <= 25, and the median alone above that.",
@@ -78,6 +78,10 @@ ui_text <- list(
     lbl_split_k = "Number of comparisons (k):",
     lbl_split_mean = "Control group mean (optional):",
     lbl_split_sd = "Control group SD (optional):",
+    lbl_split_weighting = "How to divide the control N:",
+    choice_split_even = "Equally (Cochrane default)",
+    choice_split_proportional = "In proportion to intervention arm sizes",
+    lbl_split_arm_n = "Intervention arm sizes, comma-separated (one per comparison):",
     lbl_study_id = "Study ID (optional):",
     lbl_group_label = "Group label (optional):",
     lbl_group_prefix = "Group label prefix (optional):",
@@ -111,6 +115,7 @@ ui_text <- list(
     result_label_mean = "Mean",
     result_label_n = "N",
     result_label_n_per_comparison = "N per comparison",
+    result_label_n_total = "Total allocated",
     result_label_mean_sd_slash = "Mean/SD",
     combine_row_error = "Provide at least 2 complete rows (N, mean, SD).",
 
@@ -156,12 +161,12 @@ ui_text <- list(
     card_workspace = "Área de trabalho",
     card_result = "Resultado",
 
-    help_se = "DP = EP vezes a raiz quadrada de n. Manual Cochrane 6.5.2.3.",
+    help_se = "DP = EP vezes a raiz quadrada de n. Manual Cochrane 6.5.2.2.",
     help_ci = "Pressupõe um IC 95% simétrico para uma média. EP = (limite superior - limite inferior) / (2 vezes o valor crítico); DP = EP vezes a raiz quadrada de n.",
     help_iqr = "DP = (Q3 - Q1) / 1,35 (aproximação normal).",
     help_sdchange = "DP_mudança = raiz quadrada de (DP_base^2 + DP_final^2 - 2 * r * DP_base * DP_final)",
     help_combine = "Edite a tabela abaixo (adicione linhas para k > 2 grupos) e depois combine.",
-    help_split = "N_ajustado = arredondar(N_controle / k); média e DP permanecem inalterados.",
+    help_split = "O N do controle é dividido em k partes inteiras que somam exatamente esse total; média e DP permanecem inalterados.",
     help_workspace = "Os resultados enviados de qualquer calculadora aparecem aqui. Edite a tabela diretamente, se necessário.",
 
     help_hozo_fields = "Hozo exige mínimo, mediana, máximo e n (apenas S1). A fórmula do DP muda em n <= 15, n <= 70 e n > 70; a média usa a fórmula completa da amplitude para n <= 25 e a mediana isolada acima disso.",
@@ -188,6 +193,10 @@ ui_text <- list(
     lbl_split_k = "Número de comparações (k):",
     lbl_split_mean = "Média do grupo controle (opcional):",
     lbl_split_sd = "DP do grupo controle (opcional):",
+    lbl_split_weighting = "Como dividir o N do controle:",
+    choice_split_even = "Igualmente (padrão Cochrane)",
+    choice_split_proportional = "Proporcionalmente ao tamanho dos braços de intervenção",
+    lbl_split_arm_n = "Tamanhos dos braços de intervenção, separados por vírgula (um por comparação):",
     lbl_study_id = "ID do estudo (opcional):",
     lbl_group_label = "Rótulo do grupo (opcional):",
     lbl_group_prefix = "Prefixo do rótulo do grupo (opcional):",
@@ -221,6 +230,7 @@ ui_text <- list(
     result_label_mean = "Média",
     result_label_n = "N",
     result_label_n_per_comparison = "N por comparação",
+    result_label_n_total = "Total alocado",
     result_label_mean_sd_slash = "Média/DP",
     combine_row_error = "Informe pelo menos 2 linhas completas (N, média, DP).",
 
@@ -290,7 +300,17 @@ messages <- list(
       )
     },
     combine_n_too_small = function(args) "N1 + N2 must be greater than 1.",
-    combine_need_two_groups = function(args) "Provide at least 2 groups with matching N, mean, and SD values."
+    combine_need_two_groups = function(args) "Provide at least 2 groups with matching N, mean, and SD values.",
+    split_n_lt_k = function(args) {
+      sprintf(
+        "The control N (%s) is smaller than the number of comparisons (%s), so at least one comparison would receive no participants.",
+        args$n_control, args$k
+      )
+    },
+    split_arm_n_length = function(args) {
+      sprintf("Proportional splitting needs one intervention arm size for each of the %s comparisons.", args$k)
+    },
+    split_arm_n_positive = function(args) "Every intervention arm size must be greater than 0."
   ),
   pt = list(
     missing_input = function(args) {
@@ -316,7 +336,17 @@ messages <- list(
       )
     },
     combine_n_too_small = function(args) "N1 + N2 deve ser maior que 1.",
-    combine_need_two_groups = function(args) "Informe pelo menos 2 grupos com valores correspondentes de N, média e DP."
+    combine_need_two_groups = function(args) "Informe pelo menos 2 grupos com valores correspondentes de N, média e DP.",
+    split_n_lt_k = function(args) {
+      sprintf(
+        "O N do controle (%s) é menor que o número de comparações (%s), de modo que pelo menos uma comparação ficaria sem participantes.",
+        args$n_control, args$k
+      )
+    },
+    split_arm_n_length = function(args) {
+      sprintf("A divisão proporcional exige o tamanho de um braço de intervenção para cada uma das %s comparações.", args$k)
+    },
+    split_arm_n_positive = function(args) "Cada tamanho de braço de intervenção deve ser maior que 0."
   )
 )
 
