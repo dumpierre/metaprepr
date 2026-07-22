@@ -288,17 +288,69 @@ test_that("Combine groups: rejects mismatched vector lengths and k<2", {
 # Split shared control group
 # ---------------------------------------------------------------------------
 
-test_that("Split control: n_adjusted = round(n_control / k)", {
+test_that("Split control: returns k parts and passes mean/SD through unchanged", {
   res <- split_control(n_control = 100, k = 3, mean_control = 5, sd_control = 2)
   expect_true(res$ok)
-  expect_equal(res$n_adjusted, round(100 / 3))
+  expect_length(res$n_adjusted, 3)
   expect_equal(res$mean, 5)
   expect_equal(res$sd, 2)
 })
 
-test_that("Split control: rejects k < 2 and non-integer k", {
+test_that("Split control: the parts always sum to n_control, never more", {
+  # Regression guard against the earlier round(n_control / k) behaviour,
+  # which allocated 14 x 3 = 42 participants out of a control arm of 41.
+  res <- split_control(n_control = 41, k = 3)
+  expect_equal(sum(res$n_adjusted), 41)
+  expect_equal(sort(res$n_adjusted, decreasing = TRUE), c(14L, 14L, 13L))
+
+  for (n in c(7, 10, 41, 99, 100, 1001)) {
+    for (k in 2:6) {
+      r <- split_control(n_control = n, k = k)
+      expect_true(r$ok)
+      expect_equal(sum(r$n_adjusted), n)
+      expect_true(all(r$n_adjusted >= 1))
+      # "approximately equal" means no two parts differ by more than 1
+      expect_lte(max(r$n_adjusted) - min(r$n_adjusted), 1)
+    }
+  }
+})
+
+test_that("Split control: proportional weighting reproduces the HbA1c worked example", {
+  # Church (2010): control n = 41 shared across resistance (73), aerobic
+  # (72), and combined (76) arms. Exact shares are 13.54, 13.36, 14.10.
+  res <- split_control(n_control = 41, k = 3, weighting = "proportional",
+                        arm_n = c(73, 72, 76))
+  expect_true(res$ok)
+  expect_equal(sum(res$n_adjusted), 41)
+  # The largest arm must not receive less than the smallest arm.
+  expect_gte(res$n_adjusted[3], res$n_adjusted[2])
+})
+
+test_that("Split control: proportional weighting needs one arm size per comparison", {
+  expect_false(split_control(n_control = 41, k = 3, weighting = "proportional",
+                              arm_n = c(73, 72))$ok)
+  expect_false(split_control(n_control = 41, k = 3, weighting = "proportional",
+                              arm_n = c(73, 72, 0))$ok)
+  expect_false(split_control(n_control = 41, k = 2, weighting = "proportional",
+                              arm_n = NULL)$ok)
+})
+
+test_that("Split control: rejects k < 2, non-integer k, and n_control < k", {
   expect_false(split_control(n_control = 100, k = 1)$ok)
   expect_false(split_control(n_control = 100, k = 2.5)$ok)
+  expect_false(split_control(n_control = 2, k = 3)$ok)
+})
+
+test_that("largest_remainder_allocate: exact totals under equal and skewed weights", {
+  expect_equal(sum(largest_remainder_allocate(41, rep(1, 3))), 41)
+  expect_equal(sum(largest_remainder_allocate(7, c(1, 1, 1, 1, 1))), 7)
+  expect_equal(largest_remainder_allocate(10, c(1, 1)), c(5L, 5L))
+  expect_equal(largest_remainder_allocate(9, c(2, 1)), c(6L, 3L))
+  # A weight carrying almost all the mass still leaves the others >= 0 and
+  # the total exact.
+  alloc <- largest_remainder_allocate(100, c(97, 2, 1))
+  expect_equal(sum(alloc), 100)
+  expect_true(is.integer(alloc))
 })
 
 # ---------------------------------------------------------------------------
@@ -315,7 +367,9 @@ test_that("Every failure path returns a non-empty code and ok=FALSE", {
     calc_median_to_mean_sd(min_val = 2, med_val = 5, n = 30, method = "wan"),
     calc_sd_change(sd_base = 3, sd_final = 4, r = 1.5),
     combine_groups(n = c(10), mean = c(5), sd = c(1)),
-    split_control(n_control = 100, k = 1)
+    split_control(n_control = 100, k = 1),
+    split_control(n_control = 2, k = 3),
+    split_control(n_control = 41, k = 3, weighting = "proportional", arm_n = c(73, 72))
   )
   for (res in failing_results) {
     expect_false(res$ok)

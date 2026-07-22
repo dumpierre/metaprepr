@@ -189,14 +189,25 @@ app_server <- function(input, output, session) {
 
   # -- Split shared control group -----------------------------------------------
   split_res <- shiny::reactiveVal(NULL)
+  # Arm sizes arrive as free text ("72, 73, 76") so the user can type them
+  # without a variable number of numericInputs. Anything unparseable becomes
+  # NA and is rejected by split_control()'s own validation.
+  parse_arm_n <- function(txt) {
+    if (is.null(txt) || !nzchar(trimws(txt))) return(numeric(0))
+    parts <- trimws(strsplit(txt, "[,;[:space:]]+")[[1]])
+    as.list(suppressWarnings(as.numeric(parts[nzchar(parts)])))
+  }
   shiny::observeEvent(input$split_calc, {
     split_res(split_control(n_control = input$split_n, k = input$split_k,
-                             mean_control = input$split_mean, sd_control = input$split_sd))
+                             mean_control = input$split_mean, sd_control = input$split_sd,
+                             weighting = input$split_weighting,
+                             arm_n = parse_arm_n(input$split_arm_n)))
   })
   output$split_result <- shiny::renderText({
     format_result_text(split_res(), function(r) sprintf(
-      "%s: %.0f (x%d)\n%s: %s / %s",
-      t("result_label_n_per_comparison"), r$n_adjusted, input$split_k,
+      "%s: %s\n%s: %d\n%s: %s / %s",
+      t("result_label_n_per_comparison"), paste(r$n_adjusted, collapse = ", "),
+      t("result_label_n_total"), sum(r$n_adjusted),
       t("result_label_mean_sd_slash"),
       ifelse(is.na(r$mean), t("result_not_provided"), sprintf("%.4f", r$mean)),
       ifelse(is.na(r$sd), t("result_not_provided"), sprintf("%.4f", r$sd))
@@ -205,9 +216,9 @@ app_server <- function(input, output, session) {
   shiny::observeEvent(input$split_send, {
     r <- split_res()
     shiny::req(r, r$ok)
-    for (i in seq_len(input$split_k)) {
+    for (i in seq_along(r$n_adjusted)) {
       label <- paste0(ifelse(input$split_group == "", "control", input$split_group), "_", i)
-      append_workspace_row(input$split_study, label, t("method_split"), r$mean, r$sd, r$n_adjusted)
+      append_workspace_row(input$split_study, label, t("method_split"), r$mean, r$sd, r$n_adjusted[i])
     }
   })
 

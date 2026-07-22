@@ -40,15 +40,15 @@ or open `app.R` in RStudio and click "Run App".
 
 | Tool | Formula | Source |
 |---|---|---|
-| SE -> SD | SD = SE * sqrt(n) | Cochrane Handbook 6.5.2.3 |
-| 95% CI -> SD | SE = (upper-lower)/(2*t or z); SD = SE*sqrt(n) | Cochrane Handbook 6.5.2.3 |
-| IQR -> SD | SD = (Q3-Q1)/1.35 | Normal-approximation rule of thumb |
+| SE -> SD | SD = SE * sqrt(n) | Cochrane Handbook 6.5.2.2 |
+| 95% CI -> SD | SE = (upper-lower)/(2*t or z); SD = SE*sqrt(n) | Cochrane Handbook 6.5.2.2 |
+| IQR -> SD | SD = (Q3-Q1)/1.35 | Cochrane Handbook 6.5.2.5 (normal-approximation rule of thumb) |
 | Median/range/IQR -> Mean & SD (Hozo) | Piecewise by n; see `docs/methods.md` | Hozo, Djulbegovic & Hozo (2005), *BMC Med Res Methodol* 5:13 |
 | Median/range/IQR -> Mean & SD (Wan) | SD via Wan et al.'s S1/S2/S3 estimators | Wan, Wang, Liu & Tong (2014), *BMC Med Res Methodol* 14:135 |
 | Median/range/IQR -> Mean & SD (Luo) | n-weighted optimal mean estimator, paired with Wan SD | Luo, Wan, Liu & Tong (2016/2018), *Stat Methods Med Res* |
 | SD of change from baseline | SD = sqrt(SDb^2 + SDf^2 - 2*r*SDb*SDf) | Cochrane Handbook 6.5.2.8, r=0.5 default imputation |
-| Combine groups | Weighted mean; pooled SD via Table 6.5.a | Cochrane Handbook Table 6.5.a |
-| Split shared control | n_adjusted = round(n_control/k) | Cochrane Handbook 23.3.4 (simple approximation) |
+| Combine groups | Weighted mean; pooled SD via Table 6.5.a | Cochrane Handbook 6.5.2.10, Table 6.5.a |
+| Split shared control | n_control divided into k whole parts summing to n_control (equal or proportional to arm size) | Cochrane Handbook 23.3.4 (approximation; Handbook prefers combining) |
 
 Full assumptions and derivations: `docs/methods.md`. Task-based walkthrough:
 `docs/user-guide.md`.
@@ -58,8 +58,9 @@ Full assumptions and derivations: `docs/methods.md`. Task-based walkthrough:
 The Wan/Luo estimators use `metaBLUE::Wan.std()` and `metaBLUE::Luo.mean()` -
 the same functions the `estmeansd` package depends on internally for these
 exact formulas - rather than a hand-rolled reimplementation. All calculators
-are unit-tested in `tests/testthat/test-calculations.R` (86 tests), including
-cross-validation against `estmeansd::qe.mean.sd()` on simulated data. Run:
+are unit-tested in `tests/testthat/test-calculations.R` (34 test blocks, 246
+assertions), including cross-validation against `estmeansd::qe.mean.sd()` on
+simulated data. Run:
 
 ```r
 testthat::test_dir("tests/testthat")

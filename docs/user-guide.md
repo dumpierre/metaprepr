@@ -80,13 +80,20 @@ final SDs are reported"
 1. Go to **Meta-analysis adjustments -> Split shared control**.
 2. Enter the control group's N and how many comparisons (k) share it.
    Optionally enter its mean/SD (passed through unchanged).
-3. Click **Calculate**, then **Send all k rows to workspace** - this creates
-   k rows, each with the adjusted N and a numbered group label
-   (`control_1`, `control_2`, ...), ready to pair with each comparison's
-   intervention arm.
-4. Remember this is Cochrane's simple approximation, not a full network
+3. Choose how to divide the control N. **Equally** is Cochrane's default.
+   **In proportion to intervention arm sizes** gives a larger share to the
+   comparison against a larger arm; it needs the k arm sizes, typed
+   comma-separated (e.g. `72, 73, 76`).
+4. Click **Calculate**. The result shows the N for each comparison and the
+   total, which always adds back up to the control N you entered.
+5. Click **Send all k rows to workspace** - this creates k rows, each with
+   its own adjusted N and a numbered group label (`control_1`, `control_2`,
+   ...), ready to pair with each comparison's intervention arm.
+6. Remember this is Cochrane's simple approximation, not a full network
    meta-analysis correction - see `methods.md`, section 7, if your review
-   needs the more rigorous approach.
+   needs the more rigorous approach. Combining the intervention arms into
+   one group instead (the task above) avoids the problem altogether and is
+   often the better choice.
 
 ## Exporting your workspace
 
