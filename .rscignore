@@ -1,0 +1,12 @@
+# Files rsconnect should leave out of the deployment bundle.
+# One path per line, relative to the app directory; no wildcards.
+# The running app needs only app.R and R/ - everything below is repository
+# material (paper/ alone carries a 5.6 MB TIFF).
+tests
+docs
+paper
+data-raw
+deploy.R
+DEPLOY.md
+README.md
+.gitignore

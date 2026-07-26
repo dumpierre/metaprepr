@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DataPrepR: convert reported statistics into meta-analysis-ready data</title>
-<meta name="description" content="A toolkit for converting medians, ranges, IQRs, SEs and CIs into mean/SD for meta-analysis, following the Cochrane Handbook and Hozo/Wan/Luo methods.">
+<title>MetaPrepR: convert reported statistics into meta-analysis-ready data</title>
+<meta name="description" content="MetaPrepR (Meta-Analysis Preparation in R) converts medians, ranges, IQRs, SEs and CIs into mean/SD for meta-analysis, following the Cochrane Handbook and Hozo/Wan/Luo methods.">
 <style>
   :root {
     --paper: #f7f5ef;
@@ -294,13 +294,13 @@
 
 <header class="site">
   <div class="wrap">
-    <div class="wordmark display">DataPrepR
-      <span class="tag mono">median → mean · IQR → SD · Cochrane-aligned</span>
+    <div class="wordmark display">MetaPrepR
+      <span class="tag mono">meta-analysis preparation in R · Cochrane-aligned</span>
     </div>
     <nav class="site-nav">
       <a href="user-guide.md">User guide</a>
       <a href="methods.md">Methods</a>
-      <a href="#" class="btn btn-primary" aria-label="Launch the DataPrepR app (placeholder link)">Launch app</a>
+      <a href="#" class="btn btn-primary" aria-label="Launch the MetaPrepR app (placeholder link)">Launch app</a>
     </nav>
   </div>
 </header>
@@ -309,7 +309,7 @@
   <section class="hero">
     <div class="wrap">
       <h1 class="display">Your studies report <em>medians</em>.<br>Your meta-analysis needs <em>means</em>.</h1>
-      <p class="lede">DataPrepR converts what trials actually publish into the mean and SD your
+      <p class="lede">MetaPrepR converts what trials actually publish into the mean and SD your
         synthesis needs: medians, ranges, IQRs, standard errors, and confidence intervals, using
         methods validated against the Cochrane Handbook and the Hozo, Wan, and Luo literature.</p>
 
@@ -405,15 +405,15 @@
         </div>
         <div class="flow-step">
           <span class="num mono">2</span>
-          <h3>Pick a method</h3>
-          <p>The app tells you which scenario it detected (S1/S2/S3) and defaults to the
-            method the literature recommends.</p>
+          <h3>Read the result as you type</h3>
+          <p>Results update on every keystroke, and the app tells you which scenario it
+            detected (S1/S2/S3) and defaults to the method the literature recommends.</p>
         </div>
         <div class="flow-step">
           <span class="num mono">3</span>
           <h3>Export your workspace</h3>
-          <p>Every result lands in one editable table. Download as CSV or XLSX when your
-            dataset is ready.</p>
+          <p>Every result lands in one editable table, tagged with the tool that produced
+            it. Download as CSV or XLSX when your dataset is ready.</p>
         </div>
       </div>
     </div>
@@ -422,7 +422,7 @@
   <section class="trust">
     <div class="wrap">
       <div class="badges">
-        <span class="badge mono">107/107 unit tests passing</span>
+        <span class="badge mono">552/552 test assertions passing</span>
         <span class="badge mono">cross-validated vs. estmeansd</span>
         <span class="badge mono">Cochrane Handbook aligned</span>
         <span class="badge mono">Wan/Luo via metaBLUE</span>
@@ -437,9 +437,9 @@
       <a href="user-guide.md">User guide</a>
       <a href="methods.md">Methods</a>
       <a href="../paper/paper.md">Software paper (draft)</a>
-      <a href="#">Source (placeholder)</a>
+      <a href="https://github.com/dumpierre/metaprepr">Source code</a>
     </div>
-    <p>DataPrepR is MIT-licensed research software. Formulas are cited to their original
+    <p>MetaPrepR is MIT-licensed research software. Formulas are cited to their original
       sources throughout; check the methods reference before relying on any single estimate.</p>
   </div>
 </footer>

@@ -1,6 +1,8 @@
-# DataPrepR: A Toolkit for Systematic Review Data Preparation
+# MetaPrepR: Meta-Analysis Preparation in R
 # Thin launcher - see R/app_ui.R and R/app_server.R for UI/server logic,
 # and R/calc_*.R / R/*_groups.R / R/*_control.R for the calculators.
+#
+# Deployment and analytics setup: see DEPLOY.md.
 
 library(shiny)
 library(bslib)
