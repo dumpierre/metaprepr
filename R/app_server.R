@@ -295,41 +295,69 @@ app_server <- function(input, output, session) {
   # ---------------------------------------------------------------------------
   # Combine groups
   # ---------------------------------------------------------------------------
-  output$combine_table <- rhandsontable::renderRHandsontable({
-    default_df <- data.frame(N = c(NA_real_, NA_real_), Mean = c(NA_real_, NA_real_),
-                             SD = c(NA_real_, NA_real_))
-    rhandsontable::rhandsontable(default_df, rowHeaders = TRUE,
-                                 colHeaders = c(t("col_n"), t("col_mean"), t("col_sd"))) |>
-      rhandsontable::hot_context_menu(allowRowEdit = TRUE, allowColEdit = FALSE)
+  # How many groups to ask for; clamped so a stray keystroke cannot ask the
+  # browser to render hundreds of inputs.
+  comb_k <- shiny::reactive({
+    k <- input$comb_k
+    if (is.null(k) || length(k) == 0 || is.na(k)) return(2L)
+    max(2L, min(10L, as.integer(k)))
+  })
+
+  # One labelled row of N / Mean / SD per group. Only comb_k is a dependency:
+  # the current values are read with isolate() so that raising the group count
+  # re-renders the block without wiping what has already been typed.
+  output$comb_inputs <- shiny::renderUI({
+    k <- comb_k()
+    keep <- function(id) {
+      v <- shiny::isolate(input[[id]])
+      if (is.null(v) || length(v) == 0) NA else v
+    }
+    shiny::tagList(lapply(seq_len(k), function(i) {
+      shiny::div(
+        class = "mp-comb-group",
+        shiny::div(class = "mp-comb-title", sprintf(t("lbl_comb_group"), i)),
+        bslib::layout_columns(
+          shiny::numericInput(paste0("comb_n_", i), t("col_n"),
+                              value = keep(paste0("comb_n_", i)), min = 1, step = 1),
+          shiny::numericInput(paste0("comb_mean_", i), t("col_mean"),
+                              value = keep(paste0("comb_mean_", i)), step = 0.01),
+          shiny::numericInput(paste0("comb_sd_", i), t("col_sd_optional"),
+                              value = keep(paste0("comb_sd_", i)), min = 0, step = 0.01),
+          col_widths = c(4, 4, 4)
+        )
+      )
+    }))
   })
 
   comb_state <- shiny::reactive({
-    if (is.null(input$combine_table)) return(list(status = "empty"))
-    tbl <- rhandsontable::hot_to_r(input$combine_table)
-    complete <- tbl[stats::complete.cases(tbl), , drop = FALSE]
-    if (nrow(complete) == 0) return(list(status = "empty"))
-    if (nrow(complete) < 2) {
-      return(list(status = "error", code = "__combine_row_error__", args = NULL))
+    k <- comb_k()
+    grab <- function(prefix) {
+      vapply(seq_len(k), function(i) {
+        v <- input[[paste0(prefix, i)]]
+        if (is.null(v) || length(v) == 0) NA_real_ else as.numeric(v)
+      }, numeric(1))
     }
-    state_from(combine_groups(n = complete$N, mean = complete$Mean, sd = complete$SD), FALSE)
+    n <- grab("comb_n_"); mean_v <- grab("comb_mean_"); sd_v <- grab("comb_sd_")
+
+    if (all_blank(n, mean_v, sd_v)) return(list(status = "empty"))
+    state_from(combine_groups(n = n, mean = mean_v, sd = sd_v), FALSE)
   })
+
   output$comb_banner <- shiny::renderUI({
     st <- comb_state()
-    if (identical(st$code, "__combine_row_error__")) {
-      return(shiny::div(class = "alert alert-warning mb-0",
-                        paste(t("result_error_prefix"), t("combine_row_error"))))
-    }
     render_banner(st, ok_rows(
       row_of(t("result_label_n"), fmt_num(st$n, 0)),
       row_of(t("result_label_mean"), fmt_num(st$mean)),
-      row_of(t("result_label_sd"), fmt_num(st$sd))
+      row_of(t("result_label_sd"),
+             if (isTRUE(st$sd_available)) fmt_num(st$sd) else t("result_sd_unavailable"))
     ))
   })
   guard_send("comb_send", comb_state)
   shiny::observeEvent(input$comb_send, {
     st <- comb_state()
     shiny::req(identical(st$status, "ok"))
-    send_row("comb", input$comb_study, input$comb_group, t("method_combine"),
+    method <- if (isTRUE(st$sd_available)) t("method_combine") else t("method_combine_no_sd")
+    send_row("comb", input$comb_study, input$comb_group, method,
              st$mean, st$sd, st$n)
   })
 

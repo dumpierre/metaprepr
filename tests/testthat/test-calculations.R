@@ -284,6 +284,52 @@ test_that("Combine groups: rejects mismatched vector lengths and k<2", {
   expect_false(combine_groups(n = c(10, 20), mean = c(5), sd = c(1, 2))$ok)
 })
 
+test_that("Combine groups: SD is optional; N and mean stay exact without it", {
+  # Same N and means as the two-group case above, but no SDs at all.
+  no_sd <- combine_groups(n = c(20, 30), mean = c(10, 12))
+  expect_true(no_sd$ok)
+  expect_false(no_sd$sd_available)
+  expect_equal(no_sd$n, 50)
+  expect_equal(no_sd$mean, 11.2)
+  expect_true(is.na(no_sd$sd))
+
+  # Passing all-NA SDs is the same thing as passing none.
+  expect_equal(combine_groups(n = c(20, 30), mean = c(10, 12),
+                              sd = c(NA_real_, NA_real_))$mean, 11.2)
+
+  # The weighted mean must match the SD-bearing path exactly, not approximately.
+  with_sd <- combine_groups(n = c(20, 30), mean = c(10, 12), sd = c(2, 3))
+  expect_identical(no_sd$n, with_sd$n)
+  expect_identical(no_sd$mean, with_sd$mean)
+  expect_true(with_sd$sd_available)
+
+  # k > 2 folds the same way with and without SDs.
+  n <- c(20, 30, 15); m <- c(10, 12, 9)
+  expect_equal(combine_groups(n, m)$mean,
+               combine_groups(n, m, sd = c(2, 3, 2.5))$mean)
+})
+
+test_that("Combine groups: a partial set of SDs never yields a pooled SD", {
+  # Pooling a variance from only the groups that reported one would silently
+  # describe a different group than the one being combined.
+  partial <- combine_groups(n = c(20, 30), mean = c(10, 12), sd = c(2, NA_real_))
+  expect_true(partial$ok)
+  expect_false(partial$sd_available)
+  expect_true(is.na(partial$sd))
+  expect_equal(partial$mean, 11.2)
+
+  partial3 <- combine_groups(n = c(20, 30, 15), mean = c(10, 12, 9),
+                             sd = c(2, 3, NA_real_))
+  expect_false(partial3$sd_available)
+  expect_true(is.na(partial3$sd))
+})
+
+test_that("Combine groups: N and mean are still validated when SD is omitted", {
+  expect_false(combine_groups(n = c(0, 30), mean = c(10, 12))$ok)
+  expect_false(combine_groups(n = c(20, 30), mean = c(NA_real_, 12))$ok)
+  expect_true(nzchar(combine_groups(n = c(0, 30), mean = c(10, 12))$code))
+})
+
 # ---------------------------------------------------------------------------
 # Split shared control group
 # ---------------------------------------------------------------------------

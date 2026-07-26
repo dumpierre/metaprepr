@@ -105,6 +105,13 @@ app_css <- shiny::tags$style(shiny::HTML("
             background:#f4f6f9; border:1px solid #e6e9ee; border-radius:3px;
             padding:.6rem .7rem; line-height:1.6; word-break:break-word; }
 
+  /* ---- Combine groups: one labelled block per group --------------------- */
+  .mp-comb-group { border-left:2px solid #d3daf3; padding:.1rem 0 0 .7rem;
+            margin-bottom:.35rem; }
+  .mp-comb-title { font-family:'IBM Plex Mono',monospace; font-size:.76rem;
+            font-weight:600; color:#26408a; margin-bottom:.15rem; }
+  .mp-comb-group .form-group { margin-bottom:.5rem; }
+
   /* ---- Sidebar language switch ------------------------------------------ */
   .mp-lang a { font-size:.85rem; text-decoration:none; color:#3f4854; }
   .mp-lang a.active { color:#26408a; font-weight:600; }
@@ -433,13 +440,19 @@ build_panels <- function(lang) {
 
   # -- Group manipulation --------------------------------------------------------
 
+  # Plain numbered inputs rather than an editable grid: the grid needed a
+  # right-click to add a row, which is undiscoverable and did not work at all
+  # for some users. Here the number of groups is just a number you set.
   combine_groups_panel <- bslib::nav_panel(
     title = t("nav_combine"),
     tool_page(
       bslib::card_header(t("card_combine")),
       bslib::card_body(
         shiny::p(class = "text-muted", t("help_combine")),
-        rhandsontable::rHandsontableOutput("combine_table"),
+        shiny::numericInput("comb_k", t("lbl_comb_k"), value = 2,
+                            min = 2, max = 10, step = 1),
+        shiny::uiOutput("comb_inputs"),
+        shiny::div(class = "alert alert-info", t("alert_combine_sd")),
         study_group_inputs("comb", lang, group_default = "combined"),
         result_and_send("comb", lang)
       )
