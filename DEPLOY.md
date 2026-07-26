@@ -1,6 +1,8 @@
 # MetaPrepR - Deployment & Analytics Guide
 
-This repository is a self-contained Shiny app ready for **shinyapps.io** (Posit).
+This repository is a self-contained Shiny app ready for either of Posit's hosts:
+**Posit Connect Cloud** (deploys from GitHub) or **shinyapps.io** (deploys from
+your machine). The two work differently - see sections 3a and 3b.
 
 ```
 metaprepr/
@@ -79,7 +81,46 @@ year" trend.
   is not asked again on the next visit.
 - No personally identifying data is collected by the app itself.
 
-## 3. Deploy to shinyapps.io
+## 3a. Publish to Posit Connect Cloud (git-backed)
+
+Connect Cloud does **not** upload from your machine: it reads a GitHub
+repository and rebuilds the app there. Two consequences:
+
+1. **`manifest.json` must be committed.** It is the dependency lock file
+   Connect Cloud installs from - without it the build has no package list.
+   Regenerate it whenever the app gains or drops a package:
+
+   ```r
+   # The wininet method matters on Windows: without it R cannot read the CRAN
+   # index, and every package is written with no Repository URL, which can
+   # leave the remote build with nowhere to install from.
+   options(download.file.method = "wininet",
+           repos = c(CRAN = "https://cloud.r-project.org"))
+   rsconnect::writeManifest(appDir = ".")
+   git add manifest.json && git commit -m "Update dependency manifest"
+   ```
+
+   Sanity check before pushing - every package should have a repository URL:
+
+   ```r
+   p <- jsonlite::fromJSON("manifest.json", simplifyVector = FALSE)$packages
+   sum(vapply(p, function(x) !is.null(x$Repository), logical(1))) == length(p)
+   ```
+
+2. **Whatever you want deployed has to be pushed.** Connect Cloud deploys a
+   branch, not your working tree.
+
+Then, at <https://connect.posit.cloud>: **Publish → Shiny → R**, pick the
+`dumpierre/metaprepr` repository and the branch, set the primary file to
+`app.R`, and set the content URL slug to `metaprepr`. Add `GA_MEASUREMENT_ID`
+under the content's **Variables** if you want analytics; leaving it unset is
+supported and simply disables GA.
+
+Note that `.rscignore` is honoured by `writeManifest()`, so `tests/`, `docs/`,
+`paper/`, and `data-raw/` stay out of the deployed file list even though they
+live in the repository.
+
+## 3b. Deploy to shinyapps.io
 
 ```r
 library(rsconnect)
