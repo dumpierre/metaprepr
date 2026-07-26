@@ -82,11 +82,28 @@ and the **Send to workspace** button stays disabled until the inputs are valid.
 ## Task: "I have two or more subgroups I need to combine into one group"
 
 1. Go to **Group manipulation -> Combine groups**.
-2. Edit the table directly: enter N, Mean, SD for each group. Right-click the
-   table to add rows if you have more than 2 groups.
-3. The combined N, Mean, and SD appear below the table once at least two rows
-   are complete.
-4. Send to workspace as one combined row.
+2. Set **how many groups** you are combining (2 to 10). A numbered block of
+   fields appears for each one; raising the number keeps what you have already
+   typed.
+3. Enter N and Mean for each group. **SD is optional.**
+4. The combined result appears as you type, and you send it to the workspace as
+   one row.
+
+What you get back depends on whether you supplied SDs:
+
+- **Every group has an SD** - combined N, weighted mean, and the pooled SD
+  (Cochrane Handbook Table 6.5.a). The workspace records the method as
+  "Combined groups".
+- **No SDs, or only some** - combined N and weighted mean, which need only N
+  and mean and are exact either way. No pooled SD is reported, and the
+  workspace records "Combined groups (N and mean only)" so the gap is visible
+  in your exported data.
+
+The all-or-nothing rule is deliberate. A variance pooled from only the groups
+that happened to report an SD describes those groups, not the combined group
+you asked for, and nothing downstream could tell that had happened. If you need
+the pooled SD, recover the missing SDs first with one of the variance
+conversion tools and then come back.
 
 ## Task: "Two comparisons in my meta-analysis share the same control group"
 

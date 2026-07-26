@@ -57,7 +57,7 @@ The app opens in English. Use the language switch in the sidebar (or append
 | Median/range/IQR -> Mean & SD (Wan) | `median-to-mean` | SD via Wan et al.'s S1/S2/S3 estimators | Wan, Wang, Liu & Tong (2014), *BMC Med Res Methodol* 14:135 |
 | Median/range/IQR -> Mean & SD (Luo) | `median-to-mean` | n-weighted optimal mean estimator, paired with Wan SD | Luo, Wan, Liu & Tong (2016/2018), *Stat Methods Med Res* |
 | SD of change from baseline | `sd-change-imput` | SD = sqrt(SDb^2 + SDf^2 - 2*r*SDb*SDf) | Cochrane Handbook 6.5.2.8, r=0.5 default imputation |
-| Combine groups | `combine-group` | Weighted mean; pooled SD via Table 6.5.a | Cochrane Handbook 6.5.2.10, Table 6.5.a |
+| Combine groups | `combine-group` | Weighted mean; pooled SD via Table 6.5.a. SD is optional: without it you still get the combined N and mean | Cochrane Handbook 6.5.2.10, Table 6.5.a |
 | Split shared control | `split-group` | n_control divided into k whole parts summing to n_control (equal or proportional to arm size) | Cochrane Handbook 23.3.4 (approximation; Handbook prefers combining) |
 
 The slug is written to the `Tool` column of every workspace row and every CSV

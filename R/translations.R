@@ -111,7 +111,7 @@ ui_text <- list(
     help_ci = "Assumes a symmetric 95% CI for a mean. SE = (upper - lower) / (2 times the critical value); SD = SE times the square root of n.",
     help_iqr = "SD = (Q3 - Q1) / 1.35 (normal approximation).",
     help_sdchange = "SD_change = square root of (SD_base^2 + SD_final^2 - 2 * r * SD_base * SD_final)",
-    help_combine = "Edit the table below (add rows for k > 2 groups). The result updates as you type.",
+    help_combine = "Set how many groups you are combining, then enter each one. The result updates as you type.",
     help_split = "The control N is divided into k whole parts that add back up to it exactly; mean and SD stay unchanged.",
     help_workspace = "Results sent from any calculator land here. Edit the table directly if needed.",
 
@@ -121,6 +121,7 @@ ui_text <- list(
     alert_ci = "The t and z critical values diverge for small n. Using z when n is small understates SD. Prefer t unless there is a specific reason to use z.",
     alert_iqr = "This assumes approximate normality. When the sample size is known, the Wan (2014) method under estimation & imputation is preferable.",
     alert_sdchange = "Cochrane's default imputation is r = 0.5 when the true correlation is unknown.",
+    alert_combine_sd = "SD is optional. Leave every SD blank and you still get the combined N and mean, which need only N and mean. The pooled SD requires an SD for every group: if even one is missing it is not reported, because a variance pooled from part of the groups would not describe the combined group.",
     alert_split = "This is the simple Cochrane approximation for avoiding double-counting a shared control group. For a rigorous alternative, use network or multivariate meta-analysis.",
 
     # -- Input labels --------------------------------------------------------
@@ -149,6 +150,8 @@ ui_text <- list(
     lbl_group_prefix = "Group label prefix (optional):",
     lbl_mean_optional = "Mean (optional, for the workspace):",
     lbl_n_optional = "Sample size (n, optional for the workspace):",
+    lbl_comb_k = "How many groups are you combining?",
+    lbl_comb_group = "Group %d",
 
     lbl_crit_method = "Critical value:",
     choice_t = "t distribution (exact, recommended)",
@@ -190,7 +193,7 @@ ui_text <- list(
     result_label_n_per_comparison = "N per comparison",
     result_label_n_total = "Total allocated",
     result_label_mean_sd_slash = "Mean/SD",
-    combine_row_error = "Provide at least 2 complete rows (N, mean, SD).",
+    result_sd_unavailable = "not calculated (an SD is missing)",
 
     method_se = "SE -> SD",
     method_iqr = "IQR -> SD",
@@ -198,6 +201,7 @@ ui_text <- list(
     method_wan = "Wan (2014)",
     method_luo = "Luo (2018) + Wan (2014)",
     method_combine = "Combined groups",
+    method_combine_no_sd = "Combined groups (N and mean only)",
     method_split = "Split control",
 
     col_study_id = "Study ID",
@@ -206,6 +210,7 @@ ui_text <- list(
     col_method = "Method",
     col_mean = "Mean",
     col_sd = "SD",
+    col_sd_optional = "SD (optional)",
     col_n = "N",
 
     # -- Notes ----------------------------------------------------------------
@@ -320,7 +325,7 @@ ui_text <- list(
     help_ci = "Pressupõe um IC 95% simétrico para uma média. EP = (limite superior - limite inferior) / (2 vezes o valor crítico); DP = EP vezes a raiz quadrada de n.",
     help_iqr = "DP = (Q3 - Q1) / 1,35 (aproximação normal).",
     help_sdchange = "DP_mudança = raiz quadrada de (DP_base^2 + DP_final^2 - 2 * r * DP_base * DP_final)",
-    help_combine = "Edite a tabela abaixo (adicione linhas para k > 2 grupos). O resultado é atualizado enquanto você digita.",
+    help_combine = "Defina quantos grupos você está combinando e informe cada um deles. O resultado é atualizado enquanto você digita.",
     help_split = "O N do controle é dividido em k partes inteiras que somam exatamente esse total; média e DP permanecem inalterados.",
     help_workspace = "Os resultados enviados de qualquer calculadora aparecem aqui. Edite a tabela diretamente, se necessário.",
 
@@ -330,6 +335,7 @@ ui_text <- list(
     alert_ci = "Os valores críticos t e z divergem para n pequeno. Usar z quando n é pequeno subestima o DP. Prefira t, a menos que haja um motivo específico para usar z.",
     alert_iqr = "Isso pressupõe normalidade aproximada. Quando o tamanho da amostra é conhecido, o método de Wan (2014), em estimativa e imputação, é preferível.",
     alert_sdchange = "A imputação padrão do Cochrane é r = 0,5 quando a correlação verdadeira é desconhecida.",
+    alert_combine_sd = "O DP é opcional. Deixe todos os DPs em branco e você ainda obtém o N e a média combinados, que dependem apenas de N e média. O DP agrupado exige um DP para cada grupo: se faltar um único, ele não é informado, porque uma variância agrupada a partir de apenas parte dos grupos não descreveria o grupo combinado.",
     alert_split = "Esta é a aproximação simples do Cochrane para evitar a dupla contagem de um grupo controle compartilhado. Para uma alternativa rigorosa, use metanálise em rede ou multivariada.",
 
     # -- Rótulos de entrada -------------------------------------------------------
@@ -358,6 +364,8 @@ ui_text <- list(
     lbl_group_prefix = "Prefixo do rótulo do grupo (opcional):",
     lbl_mean_optional = "Média (opcional, para a área de trabalho):",
     lbl_n_optional = "Tamanho da amostra (n, opcional para a área de trabalho):",
+    lbl_comb_k = "Quantos grupos você está combinando?",
+    lbl_comb_group = "Grupo %d",
 
     lbl_crit_method = "Valor crítico:",
     choice_t = "distribuição t (exata, recomendada)",
@@ -399,7 +407,7 @@ ui_text <- list(
     result_label_n_per_comparison = "N por comparação",
     result_label_n_total = "Total alocado",
     result_label_mean_sd_slash = "Média/DP",
-    combine_row_error = "Informe pelo menos 2 linhas completas (N, média, DP).",
+    result_sd_unavailable = "não calculado (falta um DP)",
 
     method_se = "EP -> DP",
     method_iqr = "IQR -> DP",
@@ -407,6 +415,7 @@ ui_text <- list(
     method_wan = "Wan (2014)",
     method_luo = "Luo (2018) + Wan (2014)",
     method_combine = "Grupos combinados",
+    method_combine_no_sd = "Grupos combinados (apenas N e média)",
     method_split = "Controle dividido",
 
     col_study_id = "ID do estudo",
@@ -415,6 +424,7 @@ ui_text <- list(
     col_method = "Método",
     col_mean = "Média",
     col_sd = "DP",
+    col_sd_optional = "DP (opcional)",
     col_n = "N",
 
     # -- Notas ------------------------------------------------------------------
