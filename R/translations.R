@@ -1,4 +1,4 @@
-# Translation store for DataPrepR (English primary, Portuguese optional).
+# Translation store for MetaPrepR (English primary, Portuguese optional).
 #
 # English is the default and the fallback for any missing key. Language is
 # chosen once per session via a `?lang=pt` query parameter (see app_ui.R's
@@ -6,27 +6,54 @@
 # page reload, which keeps this file a plain data structure with no Shiny
 # reactivity of its own.
 #
-# Four things live here:
-#   ui_text        - static app strings (nav titles, headers, help text,
-#                    labels, button text)
+# Five things live here:
+#   tool_slugs      - stable, never-translated identifiers for each tool
+#                     (also used as the Tool column in the workspace, in the
+#                     CSV/XLSX exports, and as the GA4 event parameter)
+#   ui_text         - static app strings (nav titles, headers, help text,
+#                     labels, button text)
 #   field_labels    - short names for calculator inputs, used inside
-#                    validation error messages (e.g. "se" -> "SE" / "EP")
+#                     validation error messages (e.g. "se" -> "SE" / "EP")
 #   scenario_labels - display labels for the internal S1/S2/S3 scenario
-#                    codes (the codes themselves are never translated -
-#                    they are matched literally in calc_median_to_mean_sd.R)
+#                     codes (the codes themselves are never translated -
+#                     they are matched literally in calc_median_to_mean_sd.R)
 #   messages        - functions (not templates) that build the final
-#                    validation/error text for each message code returned
-#                    by the calc_*.R functions; one function per language so
-#                    each can use its own word order and grammar
+#                     validation/error text for each message code returned
+#                     by the calc_*.R functions; one function per language so
+#                     each can use its own word order and grammar
+
+# Stable tool identifiers. These are deliberately language-independent and
+# must stay unchanged once published: they end up in exported datasets that
+# users cite, and in the analytics event stream, so renaming one silently
+# breaks both. Keyed by the input prefix used in the UI.
+tool_slugs <- c(
+  se    = "se-to-sd",
+  ci    = "95ci-to-sd",
+  iqr   = "iqr-to-sd",
+  med   = "median-to-mean",
+  sdc   = "sd-change-imput",
+  comb  = "combine-group",
+  split = "split-group"
+)
+
+#' Look up a tool's stable slug from its UI prefix
+tool_slug <- function(prefix) {
+  v <- tool_slugs[[prefix]]
+  if (is.null(v)) prefix else v
+}
 
 ui_text <- list(
   en = list(
-    app_title = "DataPrepR",
+    app_title = "MetaPrepR",
+    app_subtitle = "Meta-Analysis Preparation in R",
+    app_tagline = "Continuous-outcome data preparation",
 
-    nav_basic_transforms = "Basic transforms",
-    nav_median_estimation = "Median-based estimation",
-    nav_meta_adjustments = "Meta-analysis adjustments",
+    nav_home = "Home",
+    nav_variance = "Variance conversions",
+    nav_estimation = "Estimation & imputation",
+    nav_groups = "Group manipulation",
     nav_workspace = "Workspace",
+    nav_notes = "Notes",
 
     nav_se = "SE -> SD",
     nav_ci = "95% CI -> SD",
@@ -36,6 +63,39 @@ ui_text <- list(
     nav_combine = "Combine groups",
     nav_split = "Split shared control",
 
+    # -- Home --------------------------------------------------------------
+    home_title = "Prepare continuous-outcome data for meta-analysis",
+    home_lede = paste(
+      "Calculate or estimate the mean, standard deviation, and sample size a study",
+      "never reported directly, working from standard errors, confidence intervals,",
+      "medians, or quartiles, following the Cochrane Handbook and the primary",
+      "literature on estimating means and SDs from summary statistics."
+    ),
+    home_tools_label = "Tools",
+    home_refs_label = "References",
+
+    home_desc_se = "Convert a standard error into a standard deviation.",
+    home_desc_ci = "Recover the SD from a 95% confidence interval, using t or z.",
+    home_desc_iqr = "Estimate the SD from an interquartile range.",
+    home_desc_median = "Estimate mean and SD from a median with a range or quartiles (Wan, Hozo, or Luo).",
+    home_desc_sdchange = "Impute the SD of change-from-baseline scores, with a sensitivity readout.",
+    home_desc_combine = "Pool two or more arms into one weighted mean and SD.",
+    home_desc_split = "Divide a shared control group across several comparisons.",
+    home_desc_workspace = "Collect every result, then export to CSV or XLSX.",
+    home_desc_notes = "What the app does, how to cite it, and where the code lives.",
+
+    ref_cochrane = "Higgins JPT, Thomas J, Chandler J, et al., editors. Cochrane Handbook for Systematic Reviews of Interventions. Version 6.5. Cochrane; 2024.",
+    ref_hozo = "Hozo SP, Djulbegovic B, Hozo I. Estimating the mean and variance from the median, range, and the size of a sample. BMC Med Res Methodol. 2005;5:13.",
+    ref_wan = "Wan X, Wang W, Liu J, Tong T. Estimating the sample mean and standard deviation from the sample size, median, range and/or interquartile range. BMC Med Res Methodol. 2014;14:135.",
+    ref_luo = "Luo D, Wan X, Liu J, Tong T. Optimally estimating the sample mean from the sample size, median, mid-range, and/or mid-quartile range. Stat Methods Med Res. 2018;27(6):1785-1805.",
+
+    # -- Sidebar ------------------------------------------------------------
+    sidebar_language = "Language",
+    sidebar_ws_preview = "Workspace preview",
+    sidebar_ws_empty = "No data yet. Send a result from any tool.",
+    sidebar_ws_rows = "Rows in workspace:",
+
+    # -- Cards and help ------------------------------------------------------
     card_se = "Standard error to standard deviation",
     card_ci = "95% confidence interval (of a mean) to standard deviation",
     card_iqr = "Interquartile range to standard deviation",
@@ -44,13 +104,14 @@ ui_text <- list(
     card_combine = "Combine k >= 2 groups (Cochrane Handbook Table 6.5.a)",
     card_split = "Split a shared control group across k comparisons",
     card_workspace = "Workspace",
+    card_notes = "Notes",
     card_result = "Result",
 
     help_se = "SD = SE times the square root of n. Cochrane Handbook 6.5.2.2.",
     help_ci = "Assumes a symmetric 95% CI for a mean. SE = (upper - lower) / (2 times the critical value); SD = SE times the square root of n.",
     help_iqr = "SD = (Q3 - Q1) / 1.35 (normal approximation).",
     help_sdchange = "SD_change = square root of (SD_base^2 + SD_final^2 - 2 * r * SD_base * SD_final)",
-    help_combine = "Edit the table below (add rows for k > 2 groups), then combine.",
+    help_combine = "Edit the table below (add rows for k > 2 groups). The result updates as you type.",
     help_split = "The control N is divided into k whole parts that add back up to it exactly; mean and SD stay unchanged.",
     help_workspace = "Results sent from any calculator land here. Edit the table directly if needed.",
 
@@ -58,10 +119,11 @@ ui_text <- list(
     help_wanluo_fields = "Wan and Luo support three scenarios. Fill in what your source reports: minimum, median, maximum (S1); Q1, median, Q3 (S2); or all five (S3). Leave the rest blank.",
 
     alert_ci = "The t and z critical values diverge for small n. Using z when n is small understates SD. Prefer t unless there is a specific reason to use z.",
-    alert_iqr = "This assumes approximate normality. When the sample size is known, the Wan (2014) method under median-based estimation is preferable.",
+    alert_iqr = "This assumes approximate normality. When the sample size is known, the Wan (2014) method under estimation & imputation is preferable.",
     alert_sdchange = "Cochrane's default imputation is r = 0.5 when the true correlation is unknown.",
     alert_split = "This is the simple Cochrane approximation for avoiding double-counting a shared control group. For a rigorous alternative, use network or multivariate meta-analysis.",
 
+    # -- Input labels --------------------------------------------------------
     lbl_se = "Standard error (SE):",
     lbl_n = "Sample size (n):",
     lbl_lower = "Lower bound:",
@@ -85,6 +147,8 @@ ui_text <- list(
     lbl_study_id = "Study ID (optional):",
     lbl_group_label = "Group label (optional):",
     lbl_group_prefix = "Group label prefix (optional):",
+    lbl_mean_optional = "Mean (optional, for the workspace):",
+    lbl_n_optional = "Sample size (n, optional for the workspace):",
 
     lbl_crit_method = "Critical value:",
     choice_t = "t distribution (exact, recommended)",
@@ -95,16 +159,25 @@ ui_text <- list(
     choice_hozo = "Hozo (2005), range only",
     choice_luo = "Luo (2018) mean with Wan (2014) SD",
 
-    btn_calculate = "Calculate",
+    # -- Buttons and messages -------------------------------------------------
     btn_send = "Send to workspace",
     btn_send_split = "Send all k rows to workspace",
     btn_download_csv = "Download CSV",
     btn_download_xlsx = "Download XLSX",
+    btn_clear = "Clear table",
+    btn_cancel = "Cancel",
+    btn_delete = "Delete",
+
+    modal_clear_title = "Confirm deletion",
+    modal_clear_body = "Delete all %d record(s) from the workspace? This cannot be undone.",
+    msg_sent = "Result sent to the workspace.",
+    msg_sent_split = "%d rows sent to the workspace.",
+    msg_cleared = "Workspace cleared.",
 
     lang_toggle_to_pt = "Português",
     lang_toggle_to_en = "English",
 
-    result_awaiting = "Awaiting calculation.",
+    result_awaiting = "Enter valid values above to see the result.",
     result_error_prefix = "Cannot calculate:",
     result_not_provided = "not provided",
     result_sensitivity_header = "Sensitivity:",
@@ -129,19 +202,67 @@ ui_text <- list(
 
     col_study_id = "Study ID",
     col_group_label = "Group label",
+    col_tool = "Tool",
     col_method = "Method",
     col_mean = "Mean",
     col_sd = "SD",
-    col_n = "N"
+    col_n = "N",
+
+    # -- Notes ----------------------------------------------------------------
+    notes_technical_label = "What the app does",
+    notes_technical = paste(
+      "MetaPrepR converts the summary statistics trials actually report into the",
+      "mean, standard deviation, and sample size that inverse-variance meta-analysis",
+      "requires. It implements SD recovery from a standard error or a symmetric 95%",
+      "confidence interval (Cochrane Handbook 6.5.2.2, with a selectable t or z",
+      "critical value), the normal-approximation SD from an interquartile range",
+      "(6.5.2.5), mean and SD estimation from a median reported with a range, with",
+      "quartiles, or with both (Hozo 2005; Wan 2014; Luo 2018, across scenarios",
+      "S1-S3), imputation of the SD of change from baseline with a user-set",
+      "correlation and a sensitivity readout at r = 0.3/0.5/0.7 (6.5.2.8),",
+      "combination of k >= 2 arms into a single weighted mean and pooled SD",
+      "(Table 6.5.a), and splitting of a shared control group across k comparisons",
+      "(6.5.2.10). Every result carries its tool slug and method label into the",
+      "workspace, so the provenance of each row survives export."
+    ),
+
+    notes_plain_label = "In plain language",
+    notes_plain = paste(
+      "Meta-analysis needs each study to report an average, a measure of spread",
+      "(the standard deviation), and how many people were studied. Many papers",
+      "report something else: a middle value, a range, or an error bar. Throwing",
+      "those studies away biases the review; guessing at the numbers is worse.",
+      "This app applies the standard published formulas that translate what a paper",
+      "did report into what the analysis needs, shows the result immediately, and",
+      "keeps a record of which formula produced each number so a reader or reviewer",
+      "can check the work later."
+    ),
+
+    notes_repo_label = "Source code",
+    notes_repo_text = "The app is open source (MIT licence). Issues and pull requests are welcome.",
+    notes_citation_label = "How to cite",
+    notes_citation_software = "Umpierre D. MetaPrepR: Meta-Analysis Preparation in R [software]. 2026. Available from: https://github.com/dumpierre/metaprepr",
+    notes_citation_note = "Also cite the primary method you used (listed under References on the Home page), not only this software.",
+    notes_preprint_label = "Methodological preprint",
+    notes_preprint_text = "A methods paper describing the tool and its validation is in preparation. This entry will be replaced with the preprint DOI once it is posted.",
+
+    # -- Analytics consent ------------------------------------------------------
+    consent_text = "This site uses Google Analytics (with IP anonymization) to count visits and understand usage. No personally identifying data is collected.",
+    btn_accept = "Accept",
+    btn_decline = "Decline"
   ),
 
   pt = list(
-    app_title = "DataPrepR",
+    app_title = "MetaPrepR",
+    app_subtitle = "Preparação de Dados para Metanálise em R",
+    app_tagline = "Preparação de dados de desfechos contínuos",
 
-    nav_basic_transforms = "Transformações básicas",
-    nav_median_estimation = "Estimativa baseada na mediana",
-    nav_meta_adjustments = "Ajustes para metanálise",
+    nav_home = "Início",
+    nav_variance = "Conversões de variância",
+    nav_estimation = "Estimativa e imputação",
+    nav_groups = "Manipulação de grupos",
     nav_workspace = "Área de trabalho",
+    nav_notes = "Notas",
 
     nav_se = "EP -> DP",
     nav_ci = "IC 95% -> DP",
@@ -151,6 +272,39 @@ ui_text <- list(
     nav_combine = "Combinar grupos",
     nav_split = "Dividir controle compartilhado",
 
+    # -- Início ---------------------------------------------------------------
+    home_title = "Prepare dados de desfechos contínuos para metanálise",
+    home_lede = paste(
+      "Calcule ou estime a média, o desvio padrão e o tamanho da amostra que um estudo",
+      "não relatou diretamente, a partir de erros padrão, intervalos de confiança,",
+      "medianas ou quartis, seguindo o Manual Cochrane e a literatura primária sobre",
+      "estimativa de médias e DPs a partir de estatísticas resumidas."
+    ),
+    home_tools_label = "Ferramentas",
+    home_refs_label = "Referências",
+
+    home_desc_se = "Converta um erro padrão em desvio padrão.",
+    home_desc_ci = "Recupere o DP a partir de um intervalo de confiança de 95%, usando t ou z.",
+    home_desc_iqr = "Estime o DP a partir de um intervalo interquartil.",
+    home_desc_median = "Estime média e DP a partir de uma mediana com amplitude ou quartis (Wan, Hozo ou Luo).",
+    home_desc_sdchange = "Impute o DP dos escores de mudança, com análise de sensibilidade.",
+    home_desc_combine = "Agrupe dois ou mais braços em uma única média ponderada e DP.",
+    home_desc_split = "Divida um grupo controle compartilhado entre várias comparações.",
+    home_desc_workspace = "Reúna todos os resultados e exporte para CSV ou XLSX.",
+    home_desc_notes = "O que o aplicativo faz, como citá-lo e onde está o código.",
+
+    ref_cochrane = "Higgins JPT, Thomas J, Chandler J, et al., editores. Cochrane Handbook for Systematic Reviews of Interventions. Versão 6.5. Cochrane; 2024.",
+    ref_hozo = "Hozo SP, Djulbegovic B, Hozo I. Estimating the mean and variance from the median, range, and the size of a sample. BMC Med Res Methodol. 2005;5:13.",
+    ref_wan = "Wan X, Wang W, Liu J, Tong T. Estimating the sample mean and standard deviation from the sample size, median, range and/or interquartile range. BMC Med Res Methodol. 2014;14:135.",
+    ref_luo = "Luo D, Wan X, Liu J, Tong T. Optimally estimating the sample mean from the sample size, median, mid-range, and/or mid-quartile range. Stat Methods Med Res. 2018;27(6):1785-1805.",
+
+    # -- Barra lateral ----------------------------------------------------------
+    sidebar_language = "Idioma",
+    sidebar_ws_preview = "Prévia da área de trabalho",
+    sidebar_ws_empty = "Nenhum dado ainda. Envie um resultado de qualquer ferramenta.",
+    sidebar_ws_rows = "Linhas na área de trabalho:",
+
+    # -- Cartões e ajuda ---------------------------------------------------------
     card_se = "Erro padrão para desvio padrão",
     card_ci = "Intervalo de confiança de 95% (de uma média) para desvio padrão",
     card_iqr = "Intervalo interquartil para desvio padrão",
@@ -159,13 +313,14 @@ ui_text <- list(
     card_combine = "Combinar k >= 2 grupos (Manual Cochrane, Tabela 6.5.a)",
     card_split = "Dividir um grupo controle compartilhado entre k comparações",
     card_workspace = "Área de trabalho",
+    card_notes = "Notas",
     card_result = "Resultado",
 
     help_se = "DP = EP vezes a raiz quadrada de n. Manual Cochrane 6.5.2.2.",
     help_ci = "Pressupõe um IC 95% simétrico para uma média. EP = (limite superior - limite inferior) / (2 vezes o valor crítico); DP = EP vezes a raiz quadrada de n.",
     help_iqr = "DP = (Q3 - Q1) / 1,35 (aproximação normal).",
     help_sdchange = "DP_mudança = raiz quadrada de (DP_base^2 + DP_final^2 - 2 * r * DP_base * DP_final)",
-    help_combine = "Edite a tabela abaixo (adicione linhas para k > 2 grupos) e depois combine.",
+    help_combine = "Edite a tabela abaixo (adicione linhas para k > 2 grupos). O resultado é atualizado enquanto você digita.",
     help_split = "O N do controle é dividido em k partes inteiras que somam exatamente esse total; média e DP permanecem inalterados.",
     help_workspace = "Os resultados enviados de qualquer calculadora aparecem aqui. Edite a tabela diretamente, se necessário.",
 
@@ -173,10 +328,11 @@ ui_text <- list(
     help_wanluo_fields = "Wan e Luo aceitam três cenários. Preencha o que sua fonte relatar: mínimo, mediana, máximo (S1); Q1, mediana, Q3 (S2); ou os cinco valores (S3). Deixe o restante em branco.",
 
     alert_ci = "Os valores críticos t e z divergem para n pequeno. Usar z quando n é pequeno subestima o DP. Prefira t, a menos que haja um motivo específico para usar z.",
-    alert_iqr = "Isso pressupõe normalidade aproximada. Quando o tamanho da amostra é conhecido, o método de Wan (2014), em estimativa baseada na mediana, é preferível.",
+    alert_iqr = "Isso pressupõe normalidade aproximada. Quando o tamanho da amostra é conhecido, o método de Wan (2014), em estimativa e imputação, é preferível.",
     alert_sdchange = "A imputação padrão do Cochrane é r = 0,5 quando a correlação verdadeira é desconhecida.",
     alert_split = "Esta é a aproximação simples do Cochrane para evitar a dupla contagem de um grupo controle compartilhado. Para uma alternativa rigorosa, use metanálise em rede ou multivariada.",
 
+    # -- Rótulos de entrada -------------------------------------------------------
     lbl_se = "Erro padrão (EP):",
     lbl_n = "Tamanho da amostra (n):",
     lbl_lower = "Limite inferior:",
@@ -200,6 +356,8 @@ ui_text <- list(
     lbl_study_id = "ID do estudo (opcional):",
     lbl_group_label = "Rótulo do grupo (opcional):",
     lbl_group_prefix = "Prefixo do rótulo do grupo (opcional):",
+    lbl_mean_optional = "Média (opcional, para a área de trabalho):",
+    lbl_n_optional = "Tamanho da amostra (n, opcional para a área de trabalho):",
 
     lbl_crit_method = "Valor crítico:",
     choice_t = "distribuição t (exata, recomendada)",
@@ -210,16 +368,25 @@ ui_text <- list(
     choice_hozo = "Hozo (2005), apenas amplitude",
     choice_luo = "Média de Luo (2018) com DP de Wan (2014)",
 
-    btn_calculate = "Calcular",
+    # -- Botões e mensagens ---------------------------------------------------------
     btn_send = "Enviar para a área de trabalho",
     btn_send_split = "Enviar todas as k linhas para a área de trabalho",
     btn_download_csv = "Baixar CSV",
     btn_download_xlsx = "Baixar XLSX",
+    btn_clear = "Limpar tabela",
+    btn_cancel = "Cancelar",
+    btn_delete = "Excluir",
+
+    modal_clear_title = "Confirmar exclusão",
+    modal_clear_body = "Excluir todos os %d registro(s) da área de trabalho? Esta ação não pode ser desfeita.",
+    msg_sent = "Resultado enviado para a área de trabalho.",
+    msg_sent_split = "%d linhas enviadas para a área de trabalho.",
+    msg_cleared = "Área de trabalho limpa.",
 
     lang_toggle_to_pt = "Português",
     lang_toggle_to_en = "English",
 
-    result_awaiting = "Aguardando cálculo.",
+    result_awaiting = "Informe valores válidos acima para ver o resultado.",
     result_error_prefix = "Não é possível calcular:",
     result_not_provided = "não informado",
     result_sensitivity_header = "Sensibilidade:",
@@ -244,10 +411,54 @@ ui_text <- list(
 
     col_study_id = "ID do estudo",
     col_group_label = "Rótulo do grupo",
+    col_tool = "Ferramenta",
     col_method = "Método",
     col_mean = "Média",
     col_sd = "DP",
-    col_n = "N"
+    col_n = "N",
+
+    # -- Notas ------------------------------------------------------------------
+    notes_technical_label = "O que o aplicativo faz",
+    notes_technical = paste(
+      "O MetaPrepR converte as estatísticas resumidas que os ensaios de fato relatam",
+      "na média, no desvio padrão e no tamanho de amostra exigidos pela metanálise de",
+      "variância inversa. Implementa a recuperação do DP a partir de um erro padrão ou",
+      "de um IC 95% simétrico (Manual Cochrane 6.5.2.2, com valor crítico t ou z",
+      "selecionável), o DP por aproximação normal a partir do intervalo interquartil",
+      "(6.5.2.5), a estimativa de média e DP a partir de uma mediana relatada com",
+      "amplitude, com quartis ou com ambos (Hozo 2005; Wan 2014; Luo 2018, nos cenários",
+      "S1-S3), a imputação do DP da mudança em relação à linha de base com correlação",
+      "definida pelo usuário e análise de sensibilidade em r = 0,3/0,5/0,7 (6.5.2.8), a",
+      "combinação de k >= 2 braços em uma única média ponderada e DP agrupado",
+      "(Tabela 6.5.a) e a divisão de um grupo controle compartilhado entre k comparações",
+      "(6.5.2.10). Cada resultado leva seu identificador de ferramenta e o rótulo do",
+      "método para a área de trabalho, de modo que a procedência de cada linha",
+      "sobrevive à exportação."
+    ),
+
+    notes_plain_label = "Em linguagem simples",
+    notes_plain = paste(
+      "A metanálise precisa que cada estudo informe uma média, uma medida de dispersão",
+      "(o desvio padrão) e quantas pessoas foram estudadas. Muitos artigos relatam",
+      "outra coisa: um valor central, uma amplitude ou uma barra de erro. Descartar",
+      "esses estudos enviesa a revisão; chutar os números é pior. Este aplicativo",
+      "aplica as fórmulas publicadas que traduzem o que o artigo relatou naquilo de que",
+      "a análise precisa, mostra o resultado imediatamente e registra qual fórmula gerou",
+      "cada número, para que um leitor ou revisor possa conferir o trabalho depois."
+    ),
+
+    notes_repo_label = "Código-fonte",
+    notes_repo_text = "O aplicativo é de código aberto (licença MIT). Issues e pull requests são bem-vindos.",
+    notes_citation_label = "Como citar",
+    notes_citation_software = "Umpierre D. MetaPrepR: Meta-Analysis Preparation in R [software]. 2026. Disponível em: https://github.com/dumpierre/metaprepr",
+    notes_citation_note = "Cite também o método primário utilizado (listado em Referências, na página inicial), não apenas este software.",
+    notes_preprint_label = "Preprint metodológico",
+    notes_preprint_text = "Um artigo metodológico descrevendo a ferramenta e sua validação está em preparação. Esta entrada será substituída pelo DOI do preprint assim que ele for publicado.",
+
+    # -- Consentimento de análise ------------------------------------------------
+    consent_text = "Este site usa o Google Analytics (com anonimização de IP) para contar visitas e entender o uso. Nenhum dado de identificação pessoal é coletado.",
+    btn_accept = "Aceitar",
+    btn_decline = "Recusar"
   )
 )
 

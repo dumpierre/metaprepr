@@ -391,3 +391,32 @@ test_that("render_message() produces non-empty text in English and Portuguese", 
   expect_true(grepl("n", msg2_en))
   expect_true(nzchar(msg2_pt))
 })
+
+test_that("tool slugs are stable and language-independent", {
+  # These strings are published: they appear in the Tool column of every
+  # exported workspace and as the GA4 event parameter. Changing one silently
+  # breaks datasets users have already saved and cited, so pin them here.
+  expect_identical(tool_slug("se"), "se-to-sd")
+  expect_identical(tool_slug("ci"), "95ci-to-sd")
+  expect_identical(tool_slug("iqr"), "iqr-to-sd")
+  expect_identical(tool_slug("med"), "median-to-mean")
+  expect_identical(tool_slug("sdc"), "sd-change-imput")
+  expect_identical(tool_slug("comb"), "combine-group")
+  expect_identical(tool_slug("split"), "split-group")
+
+  expect_length(unique(tool_slugs), length(tool_slugs))
+  expect_false(any(grepl("[A-Z[:space:]]", tool_slugs)))
+})
+
+test_that("every UI key resolves in both languages", {
+  # Portuguese falls back to English rather than breaking, so a missing key is
+  # invisible at runtime; catch it here instead.
+  keys_en <- names(ui_text$en)
+  missing_pt <- keys_en[!keys_en %in% names(ui_text$pt)]
+  expect_identical(missing_pt, character(0))
+
+  for (key in keys_en) {
+    expect_true(nzchar(tr(key, "en")), info = key)
+    expect_true(nzchar(tr(key, "pt")), info = key)
+  }
+})

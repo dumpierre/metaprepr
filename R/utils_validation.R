@@ -1,4 +1,4 @@
-# Shared input validation helpers for DataPrepR calculators.
+# Shared input validation helpers for MetaPrepR calculators.
 #
 # Every calc_*() function returns a list with at least:
 #   ok      - logical, TRUE if inputs passed validation
