@@ -43,10 +43,42 @@ app_css <- shiny::tags$style(shiny::HTML("
             background:linear-gradient(90deg,#2f4b94,#12b3a6); }
   .navbar .navbar-brand { color:#1b2430 !important; font-family:'Space Grotesk',sans-serif;
             font-weight:600; letter-spacing:-.02em; font-size:1.12rem; }
-  .navbar .nav-link { color:#3f4854 !important; font-weight:400; }
+  .navbar .nav-link { color:#3f4854 !important; font-weight:400;
+            font-size:.75rem; padding-left:.55rem; padding-right:.55rem; }
   .navbar .nav-link:hover { color:#1b2430 !important; }
   .navbar .nav-link.active, .navbar .show > .nav-link { color:#26408a !important; font-weight:500; }
-  .navbar .dropdown-menu { border:1px solid #e6e9ee; }
+  /* The dropdown entries keep their normal size - only the bar itself shrinks. */
+  .navbar .dropdown-menu { border:1px solid #e6e9ee; font-size:.9rem; }
+
+  /* ---- Navbar toggle: make the hamburger visible -------------------------
+     bslib fills the toggler icon with a white SVG, which is invisible against
+     the white bar above. Repaint it in the nav-link ink and give the button an
+     outline so it reads as a control. Covers both the Bootstrap 3 markup Shiny
+     emits (.navbar-toggle > .icon-bar) and the Bootstrap 5 name. */
+  .navbar .navbar-toggle > .icon-bar:last-child,
+  .navbar .navbar-toggler-icon {
+    --bs-navbar-toggler-icon-bg: url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%233f4854' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e\");
+  }
+  .navbar .navbar-toggle, .navbar .navbar-toggler {
+    border:1px solid #d7dce4 !important; border-radius:4px;
+    padding:.3rem .45rem; background-color:transparent;
+  }
+  .navbar .navbar-toggle:hover, .navbar .navbar-toggler:hover { border-color:#2f4b94 !important; }
+
+  /* ---- Where the navbar collapses ---------------------------------------
+     Bootstrap collapses at 992px regardless of whether the labels still fit,
+     so shrinking the type alone would not buy any extra width - the bar would
+     hide itself at the same point, just in smaller letters. At .75rem the six
+     menus need roughly 750px in English and 830px in Portuguese, so the
+     expanded layout is re-asserted down to 900px and the hamburger only takes
+     over below that. Mirrors Bootstrap's own min-width:992px block. */
+  @media (min-width: 900px) {
+    .navbar { flex-wrap:nowrap; justify-content:flex-start; }
+    .navbar .navbar-collapse { display:flex !important; flex-basis:auto; }
+    .navbar .navbar-nav { flex-direction:row; }
+    .navbar .navbar-nav .dropdown-menu { position:absolute; }
+    .navbar .navbar-toggle, .navbar .navbar-toggler { display:none !important; }
+  }
 
   /* ---- Sidebar: collapse toggle pinned to the bottom edge ---------------
      bslib places the toggle at the top by default, where it collides with an
