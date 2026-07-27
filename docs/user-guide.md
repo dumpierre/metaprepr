@@ -41,13 +41,25 @@ and the **Send to workspace** button stays disabled until the inputs are valid.
    used alongside the SD.
 4. Send to workspace as above.
 
-## Task: "My study reports Q1/Q3 (IQR) but not n"
+## Task: "My study reports Q1/Q3 (IQR)"
 
 1. Go to **Variance conversions -> IQR -> SD**.
-2. Enter Q1 and Q3.
-3. This gives a normal-approximation SD that ignores sample size. If the
-   study also reports n, prefer **Median -> mean & SD** with the Wan or Luo
-   method instead - it will use n and typically be more accurate.
+2. Enter Q1 and Q3, and the sample size if the paper gives one.
+3. The result banner names the estimator it used:
+   - **With n** you get Wan et al. (2014), which corrects the interquartile
+     range for sample size. This is the default whenever n is available.
+   - **Without n** you get the Cochrane 1.35 rule, which assumes the sample
+     quartiles match the population ones. It is biased low, and the smaller the
+     study the worse it gets: roughly 14% low at n = 10 and 41% low at n = 3.
+4. Supply n whenever the paper reports it. The two formulas converge only in
+   large samples — the 1.35 rule is Wan's formula at n = infinity — so at the
+   sample sizes trials actually report the difference is worth having.
+
+The workspace records which one ran, as `IQR -> SD (Wan 2014)` or
+`IQR -> SD (1.35 rule, no n)`.
+
+If the study also reports a median alongside the quartiles, **Median -> mean &
+SD** gives you an estimated mean as well as the SD, from the same Wan method.
 
 ## Task: "My study reports median, min/max, and/or Q1/Q3 (no mean/SD at all)"
 

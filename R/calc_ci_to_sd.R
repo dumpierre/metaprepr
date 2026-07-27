@@ -3,7 +3,9 @@
 # df = n - 1; t = qt(0.975, df); SE = (upper - lower) / (2 * t); SD = SE * sqrt(n)
 # Assumes a symmetric CI for a mean. Guard n >= 2.
 # Optional "z" mode uses the fixed normal critical value 1.96 instead of the
-# t-distribution; matters for small n, where t > z and using z understates SD.
+# t-distribution; matters for small n, where t > z. SD is recovered by dividing
+# by the critical value, so assuming the smaller z OVERSTATES SD - by about 42%
+# at n=5. See docs/methods.md section 2 for both directions.
 
 #' Convert a 95% CI for a mean to SD
 #'
