@@ -108,7 +108,7 @@ ui_text <- list(
 
     help_se = "SD = SE times the square root of n. Cochrane Handbook 6.5.2.2.",
     help_ci = "Assumes a symmetric 95% CI for a mean. SE = (upper - lower) / (2 times the critical value); SD = SE times the square root of n.",
-    help_iqr = "SD = (Q3 - Q1) / 1.35 (normal approximation).",
+    help_iqr = "With a sample size: Wan et al. (2014), SD = (Q3 - Q1) / (2 x qnorm((0.75n - 0.125)/(n + 0.25))). Without one: SD = (Q3 - Q1) / 1.35.",
     help_sdchange = "SD_change = square root of (SD_base^2 + SD_final^2 - 2 * r * SD_base * SD_final)",
     help_combine = "Set how many groups you are combining, then enter each one. The result updates as you type.",
     help_split = "The control N is divided into k whole parts that add back up to it exactly; mean and SD stay unchanged.",
@@ -117,8 +117,8 @@ ui_text <- list(
     help_hozo_fields = "Hozo needs minimum, median, maximum, and n (S1 only). The SD formula switches at n <= 15, n <= 70, and n > 70; the mean uses the full range formula for n <= 25, and the median alone above that.",
     help_wanluo_fields = "Wan and Luo support three scenarios. Fill in what your source reports: minimum, median, maximum (S1); Q1, median, Q3 (S2); or all five (S3). Leave the rest blank.",
 
-    alert_ci = "The t and z critical values diverge for small n. Using z when n is small understates SD. Prefer t unless there is a specific reason to use z.",
-    alert_iqr = "This assumes approximate normality. When the sample size is known, the Wan (2014) method under estimation & imputation is preferable.",
+    alert_ci = "The t and z critical values diverge for small n, and SD is recovered by dividing by that value: at n = 5, t = 2.78 against z = 1.96, so assuming z overstates SD by about 42%. Prefer t unless you know the source study used a fixed z-based interval.",
+    alert_iqr = "Enter the sample size to use the Wan (2014) estimator, which corrects the interquartile range for n. Without it the app falls back to the Cochrane 1.35 rule, which is Wan's formula at n = infinity and understates SD in small samples: about 16% low at n = 10 and 71% low at n = 3.",
     alert_sdchange = "Cochrane's default imputation is r = 0.5 when the true correlation is unknown.",
     alert_combine_sd = "SD is optional. Leave every SD blank and you still get the combined N and mean, which need only N and mean. The pooled SD requires an SD for every group: if even one is missing it is not reported, because a variance pooled from part of the groups would not describe the combined group.",
     alert_split = "This is the simple Cochrane approximation for avoiding double-counting a shared control group. For a rigorous alternative, use network or multivariate meta-analysis.",
@@ -149,6 +149,7 @@ ui_text <- list(
     lbl_group_prefix = "Group label prefix (optional):",
     lbl_mean_optional = "Mean (optional, for the workspace):",
     lbl_n_optional = "Sample size (n, optional for the workspace):",
+    lbl_n_for_wan = "Sample size (n) - recommended; enables the Wan (2014) estimator:",
     lbl_comb_k = "How many groups are you combining?",
     lbl_comb_group = "Group %d",
 
@@ -193,9 +194,11 @@ ui_text <- list(
     result_label_n_total = "Total allocated",
     result_label_mean_sd_slash = "Mean/SD",
     result_sd_unavailable = "not calculated (an SD is missing)",
+    result_estimator_label = "Estimator",
 
     method_se = "SE -> SD",
-    method_iqr = "IQR -> SD",
+    method_iqr_wan = "IQR -> SD (Wan 2014)",
+    method_iqr_simple = "IQR -> SD (1.35 rule, no n)",
     method_hozo = "Hozo (2005)",
     method_wan = "Wan (2014)",
     method_luo = "Luo (2018) + Wan (2014)",
@@ -331,7 +334,7 @@ ui_text <- list(
 
     help_se = "DP = EP vezes a raiz quadrada de n. Manual Cochrane 6.5.2.2.",
     help_ci = "Pressupõe um IC 95% simétrico para uma média. EP = (limite superior - limite inferior) / (2 vezes o valor crítico); DP = EP vezes a raiz quadrada de n.",
-    help_iqr = "DP = (Q3 - Q1) / 1,35 (aproximação normal).",
+    help_iqr = "Com o tamanho da amostra: Wan et al. (2014), DP = (Q3 - Q1) / (2 x qnorm((0,75n - 0,125)/(n + 0,25))). Sem ele: DP = (Q3 - Q1) / 1,35.",
     help_sdchange = "DP_mudança = raiz quadrada de (DP_base^2 + DP_final^2 - 2 * r * DP_base * DP_final)",
     help_combine = "Defina quantos grupos você está combinando e informe cada um deles. O resultado é atualizado enquanto você digita.",
     help_split = "O N do controle é dividido em k partes inteiras que somam exatamente esse total; média e DP permanecem inalterados.",
@@ -340,8 +343,8 @@ ui_text <- list(
     help_hozo_fields = "Hozo exige mínimo, mediana, máximo e n (apenas S1). A fórmula do DP muda em n <= 15, n <= 70 e n > 70; a média usa a fórmula completa da amplitude para n <= 25 e a mediana isolada acima disso.",
     help_wanluo_fields = "Wan e Luo aceitam três cenários. Preencha o que sua fonte relatar: mínimo, mediana, máximo (S1); Q1, mediana, Q3 (S2); ou os cinco valores (S3). Deixe o restante em branco.",
 
-    alert_ci = "Os valores críticos t e z divergem para n pequeno. Usar z quando n é pequeno subestima o DP. Prefira t, a menos que haja um motivo específico para usar z.",
-    alert_iqr = "Isso pressupõe normalidade aproximada. Quando o tamanho da amostra é conhecido, o método de Wan (2014), em estimativa e imputação, é preferível.",
+    alert_ci = "Os valores críticos t e z divergem para n pequeno, e o DP é recuperado dividindo-se por esse valor: em n = 5, t = 2,78 contra z = 1,96, de modo que assumir z superestima o DP em cerca de 42%. Prefira t, a menos que você saiba que o estudo de origem usou um intervalo baseado em z.",
+    alert_iqr = "Informe o tamanho da amostra para usar o estimador de Wan (2014), que corrige o intervalo interquartil para n. Sem ele, o aplicativo recorre à regra 1,35 do Cochrane, que é a fórmula de Wan com n = infinito e subestima o DP em amostras pequenas: cerca de 16% abaixo em n = 10 e 71% abaixo em n = 3.",
     alert_sdchange = "A imputação padrão do Cochrane é r = 0,5 quando a correlação verdadeira é desconhecida.",
     alert_combine_sd = "O DP é opcional. Deixe todos os DPs em branco e você ainda obtém o N e a média combinados, que dependem apenas de N e média. O DP agrupado exige um DP para cada grupo: se faltar um único, ele não é informado, porque uma variância agrupada a partir de apenas parte dos grupos não descreveria o grupo combinado.",
     alert_split = "Esta é a aproximação simples do Cochrane para evitar a dupla contagem de um grupo controle compartilhado. Para uma alternativa rigorosa, use metanálise em rede ou multivariada.",
@@ -372,6 +375,7 @@ ui_text <- list(
     lbl_group_prefix = "Prefixo do rótulo do grupo (opcional):",
     lbl_mean_optional = "Média (opcional, para a área de trabalho):",
     lbl_n_optional = "Tamanho da amostra (n, opcional para a área de trabalho):",
+    lbl_n_for_wan = "Tamanho da amostra (n) - recomendado; habilita o estimador de Wan (2014):",
     lbl_comb_k = "Quantos grupos você está combinando?",
     lbl_comb_group = "Grupo %d",
 
@@ -416,9 +420,11 @@ ui_text <- list(
     result_label_n_total = "Total alocado",
     result_label_mean_sd_slash = "Média/DP",
     result_sd_unavailable = "não calculado (falta um DP)",
+    result_estimator_label = "Estimador",
 
     method_se = "EP -> DP",
-    method_iqr = "IQR -> DP",
+    method_iqr_wan = "IQR -> DP (Wan 2014)",
+    method_iqr_simple = "IQR -> DP (regra 1,35, sem n)",
     method_hozo = "Hozo (2005)",
     method_wan = "Wan (2014)",
     method_luo = "Luo (2018) + Wan (2014)",

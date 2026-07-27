@@ -74,14 +74,73 @@ test_that("CI -> SD: rejects n < 2 and upper < lower", {
 # IQR -> SD
 # ---------------------------------------------------------------------------
 
-test_that("IQR -> SD: Q1=10, Q3=20 gives 7.407 (3 dp)", {
+test_that("IQR -> SD: without n, falls back to the 1.35 rule", {
   res <- calc_iqr_to_sd(q1 = 10, q3 = 20)
   expect_true(res$ok)
+  expect_identical(res$method, "simple")
   expect_equal(round(res$sd, 3), 7.407)
 })
 
 test_that("IQR -> SD: rejects Q3 < Q1", {
   expect_false(calc_iqr_to_sd(q1 = 20, q3 = 10)$ok)
+})
+
+test_that("IQR -> SD: with n, uses Wan (2014) and matches metaBLUE exactly", {
+  # The closed form here bypasses metaBLUE::Wan.std(), which demands a median it
+  # does not use for the S2 SD. Pin the two together so the shortcut cannot
+  # drift away from the reference implementation.
+  skip_if_not_installed("metaBLUE")
+  for (n in c(3, 5, 10, 15, 25, 50, 100, 500, 5000)) {
+    ours <- calc_iqr_to_sd(q1 = 10, q3 = 20, n = n)
+    reference <- as.numeric(metaBLUE::Wan.std(c(10, 15, 20), n, "S2")$sigmahat)
+    expect_true(ours$ok)
+    expect_identical(ours$method, "wan")
+    expect_equal(ours$sd, reference, tolerance = 1e-12,
+                 info = paste("n =", n))
+  }
+})
+
+test_that("IQR -> SD: the Wan S2 SD does not depend on the median", {
+  # Why Q1/Q3/n alone is enough for this tool, even though Wan's S2 scenario is
+  # normally described as {Q1, median, Q3}.
+  skip_if_not_installed("metaBLUE")
+  sds <- vapply(c(11, 13, 15, 17, 19), function(med) {
+    as.numeric(metaBLUE::Wan.std(c(10, med, 20), 40, "S2")$sigmahat)
+  }, numeric(1))
+  expect_equal(diff(range(sds)), 0, tolerance = 1e-12)
+  expect_equal(calc_iqr_to_sd(q1 = 10, q3 = 20, n = 40)$sd, sds[1], tolerance = 1e-12)
+})
+
+test_that("IQR -> SD: the 1.35 rule is Wan's estimator at n = infinity", {
+  # Not two rival formulas - the same one at two ends of a limit. This is what
+  # justifies the fallback when n is genuinely unavailable.
+  wide <- calc_iqr_to_sd(q1 = 10, q3 = 20, n = 1e7)$sd
+  simple <- calc_iqr_to_sd(q1 = 10, q3 = 20)$sd
+  expect_equal(wide, simple, tolerance = 1e-3)
+  expect_equal(2 * qnorm(0.75), 1.34898, tolerance = 1e-5)
+})
+
+test_that("IQR -> SD: the 1.35 rule sits below Wan at small n", {
+  # Wan's criticism, as a regression test: the plain rule is biased low, and
+  # the gap widens as n shrinks.
+  simple <- calc_iqr_to_sd(q1 = 10, q3 = 20)$sd
+  gaps <- vapply(c(3, 10, 50), function(n) {
+    simple / calc_iqr_to_sd(q1 = 10, q3 = 20, n = n)$sd - 1
+  }, numeric(1))
+  expect_true(all(gaps < 0))            # always an underestimate
+  expect_true(all(diff(gaps) > 0))      # and worse the smaller n gets
+  expect_equal(round(100 * abs(gaps[1])), 41)
+})
+
+test_that("IQR -> SD: an unusable n is an error, not a silent downgrade", {
+  # n = 1 makes the estimator undefined (qnorm(0.5) = 0). Falling back quietly
+  # would hand back a different formula's number with no indication.
+  for (bad in c(1, 2)) {
+    res <- calc_iqr_to_sd(q1 = 10, q3 = 20, n = bad)
+    expect_false(res$ok)
+    expect_true(nzchar(res$code))
+    expect_true(is.na(res$sd))
+  }
 })
 
 # ---------------------------------------------------------------------------

@@ -25,12 +25,25 @@ errors and confidence intervals for group means".
 
 **Assumptions:** The CI is a symmetric 95% CI for a *group mean* (not for a
 difference between means, nor for a proportion, ratio, or other quantity).
-n >= 2. The t-distribution critical value is exact for this purpose; the
-z=1.96 approximation understates the true critical value for small n (e.g.,
-t=2.78 vs z=1.96 at n=5), which will overstate the estimated SD if used
-incorrectly, or understate it if the original study actually used t but you
-assume z. The Handbook advises that intervals for groups of fewer than about
-60 participants should have been computed from a t distribution, so prefer t
+n >= 2.
+
+**Direction of the error.** SD is recovered by *dividing* the interval by the
+critical value, so the estimate moves inversely to the value assumed. Since
+qt(0.975, n-1) > 1.96 for every finite n, the two cases are:
+
+| You assume | Study actually used | Effect on SD |
+|---|---|---|
+| z (1.96) | t | **overstates** SD |
+| t | z (1.96) | understates SD |
+
+Assuming z when the interval came from a t distribution is the common case, and
+it inflates SD. The size of the error is the ratio of the two critical values:
+at n=5, t=2.776 against z=1.96, so the SD comes out about 42% too large. The
+gap closes as n grows (15% at n=10, 4% at n=30, 1% at n=120) because
+qt(0.975, n-1) converges on 1.96.
+
+The Handbook advises that intervals for groups of fewer than about 60
+participants should have been computed from a t distribution, so prefer t
 unless you know the source study used a fixed z-based CI.
 
 The Handbook's z-mode divisor is 3.92 for a 95% CI (2 x 1.96), 3.29 for a 90%
@@ -42,18 +55,56 @@ from t statistics and P values, and is not implemented here.
 
 ## 3. Interquartile range -> standard deviation
 
-**Formula:** SD = (Q3 - Q1) / 1.35
+**Formula:** the estimator depends on whether the sample size is known.
 
-**Assumptions:** The outcome is approximately normally distributed (1.35 is
-the IQR of a standard normal distribution, i.e. qnorm(0.75)-qnorm(0.25) ~=
-1.349). This is a rule-of-thumb normal approximation that ignores sample size
-entirely. When n is known, the Wan (2014) method (below) is preferable because
-it accounts for n.
+- **n supplied (default):** Wan et al. (2014), eq. (16), scenario S2:
+  SD = (Q3 - Q1) / (2 * qnorm((0.75n - 0.125) / (n + 0.25)))
+- **n not supplied:** SD = (Q3 - Q1) / 1.35
 
-**Source:** Cochrane Handbook, section 6.5.2.5 ("Interquartile ranges"), which
-states that when sample sizes are large and the distribution is close to
-normal, the interquartile range is approximately 1.35 SDs, and cautions that
-the approximation is unreliable for skewed distributions.
+**Why n is the default path.** The 1.35 rule assumes the sampled interquartile
+range equals the population one. It does not: the expected spread of the sample
+quartiles depends on n, and the rule ignores that entirely, so it is biased
+downwards, severely in small samples. Wan et al. (2014) make exactly this
+criticism and supply the n-dependent denominator. With Q1=10 and Q3=20, the
+1.35 rule returns 7.407 against Wan's:
+
+| n | Wan SD | 1.35 rule | Error of the 1.35 rule |
+|---|---|---|---|
+| 3 | 12.635 | 7.407 | -41% |
+| 10 | 8.600 | 7.407 | -14% |
+| 25 | 7.861 | 7.407 | -6% |
+| 100 | 7.522 | 7.407 | -2% |
+| 5000 | 7.415 | 7.407 | -0.1% |
+
+**The two are one estimator, not two.** As n grows, Wan's denominator converges
+on 2 * qnorm(0.75) = 1.34898 — the 1.35 rule is Wan evaluated at n = infinity.
+That is why the fallback is defensible when n genuinely is not reported: it is
+the large-sample case of the better formula rather than a rival to it. It is
+also why the app labels which one produced each row, since the difference is
+material at the sample sizes trials actually report.
+
+**Assumptions:** Both branches assume approximate normality (1.35 is the IQR of
+a standard normal, qnorm(0.75)-qnorm(0.25) ~= 1.349) and both are unreliable
+for markedly skewed outcomes. Wan corrects for sample size, not for skew.
+
+**Implementation note:** the Wan branch is written in closed form rather than
+routed through `metaBLUE::Wan.std()`, which requires a median it does not use
+for the S2 SD. `tests/testthat/test-calculations.R` pins the closed form to
+`metaBLUE` across n = 3 to 5000 (agreement to 1e-12) and separately confirms
+that the S2 SD is invariant to the median, which is what makes Q1/Q3/n
+sufficient here.
+
+**Minimum n:** 3. The estimator is undefined at n = 1 (the denominator is
+qnorm(0.5) = 0) and quartiles are not meaningful at n = 2. An n below 3 is
+reported as an error rather than silently falling back to the 1.35 rule, which
+would otherwise change the formula without telling the user.
+
+**Source:** Cochrane Handbook, section 6.5.2.5 ("Interquartile ranges") for the
+1.35 rule, which states that when sample sizes are large and the distribution
+is close to normal, the interquartile range is approximately 1.35 SDs, and
+cautions that the approximation is unreliable for skewed distributions. Wan X,
+Wang W, Liu J, Tong T. *BMC Med Res Methodol.* 2014;14:135, for the
+sample-size-corrected estimator.
 
 ## 4. Median/range/IQR -> mean & standard deviation
 

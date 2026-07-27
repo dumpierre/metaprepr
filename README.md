@@ -52,7 +52,7 @@ The app opens in English. Use the language switch in the sidebar (or append
 |---|---|---|---|
 | SE -> SD | `se-to-sd` | SD = SE * sqrt(n) | Cochrane Handbook 6.5.2.2 |
 | 95% CI -> SD | `95ci-to-sd` | SE = (upper-lower)/(2*t or z); SD = SE*sqrt(n) | Cochrane Handbook 6.5.2.2 |
-| IQR -> SD | `iqr-to-sd` | SD = (Q3-Q1)/1.35 | Cochrane Handbook 6.5.2.5 (normal-approximation rule of thumb) |
+| IQR -> SD | `iqr-to-sd` | With n: Wan (2014) S2, SD = (Q3-Q1)/(2*qnorm((0.75n-0.125)/(n+0.25))). Without n: SD = (Q3-Q1)/1.35 | Wan et al. (2014) 14:135; Cochrane Handbook 6.5.2.5 for the fallback |
 | Median/range/IQR -> Mean & SD (Hozo) | `median-to-mean` | Piecewise by n; see `docs/methods.md` | Hozo, Djulbegovic & Hozo (2005), *BMC Med Res Methodol* 5:13 |
 | Median/range/IQR -> Mean & SD (Wan) | `median-to-mean` | SD via Wan et al.'s S1/S2/S3 estimators | Wan, Wang, Liu & Tong (2014), *BMC Med Res Methodol* 14:135 |
 | Median/range/IQR -> Mean & SD (Luo) | `median-to-mean` | n-weighted optimal mean estimator, paired with Wan SD | Luo, Wan, Liu & Tong (2016/2018), *Stat Methods Med Res* |

@@ -189,18 +189,24 @@ app_server <- function(input, output, session) {
   # IQR -> SD
   # ---------------------------------------------------------------------------
   iqr_state <- shiny::reactive({
-    state_from(calc_iqr_to_sd(q1 = input$iqr_q1, q3 = input$iqr_q3),
+    state_from(calc_iqr_to_sd(q1 = input$iqr_q1, q3 = input$iqr_q3, n = input$iqr_n),
                all_blank(input$iqr_q1, input$iqr_q3))
   })
+  iqr_method_label <- function(method) {
+    if (identical(method, "wan")) t("method_iqr_wan") else t("method_iqr_simple")
+  }
   output$iqr_banner <- shiny::renderUI({
     st <- iqr_state()
-    render_banner(st, ok_rows(row_of(t("result_label_sd"), fmt_num(st$sd))))
+    render_banner(st, ok_rows(
+      row_of(t("result_label_sd"), fmt_num(st$sd)),
+      row_of(t("result_estimator_label"), iqr_method_label(st$method))
+    ))
   })
   guard_send("iqr_send", iqr_state)
   shiny::observeEvent(input$iqr_send, {
     st <- iqr_state()
     shiny::req(identical(st$status, "ok"))
-    send_row("iqr", input$iqr_study, input$iqr_group, t("method_iqr"),
+    send_row("iqr", input$iqr_study, input$iqr_group, iqr_method_label(st$method),
              input$iqr_mean, st$sd, input$iqr_n)
   })
 

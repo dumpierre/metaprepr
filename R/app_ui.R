@@ -406,7 +406,7 @@ build_panels <- function(lang) {
         shiny::p(class = "text-muted", t("help_iqr")),
         shiny::numericInput("iqr_q1", t("lbl_q1"), value = NA, step = 0.01),
         shiny::numericInput("iqr_q3", t("lbl_q3"), value = NA, step = 0.01),
-        shiny::numericInput("iqr_n", t("lbl_n_optional"), value = NA, min = 1, step = 1),
+        shiny::numericInput("iqr_n", t("lbl_n_for_wan"), value = NA, min = 3, step = 1),
         shiny::numericInput("iqr_mean", t("lbl_mean_optional"), value = NA, step = 0.01),
         shiny::div(class = "alert alert-info", t("alert_iqr")),
         study_group_inputs("iqr", lang),

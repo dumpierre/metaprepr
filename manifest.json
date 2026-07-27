@@ -1264,16 +1264,16 @@
       "checksum": "8c783810d719ef28c56e4433c42404dc"
     },
     "R/app_server.R": {
-      "checksum": "5bebf3b196201d8fee0920dc74fa7ee1"
+      "checksum": "e32654dabeb1c5deebca68fd49c3bc6b"
     },
     "R/app_ui.R": {
-      "checksum": "3b065293dcd78e3a0af6bde7fe99edb5"
+      "checksum": "f5104793898da5695e3c2d095d6e6b1c"
     },
     "R/calc_ci_to_sd.R": {
-      "checksum": "3370a1cc624b44b6ba1275d946484ec6"
+      "checksum": "3589791230d1e10e31e5f7232b05159a"
     },
     "R/calc_iqr_to_sd.R": {
-      "checksum": "4475c0067062f892844a85350e5b85e1"
+      "checksum": "c2f50875fa7b5c1d4aee80e2cbb161b2"
     },
     "R/calc_median_to_mean_sd.R": {
       "checksum": "f0d1be69faaef47448f50fd93020f237"
@@ -1291,7 +1291,7 @@
       "checksum": "ef22f5407a15834db20b3a8e9ae20554"
     },
     "R/translations.R": {
-      "checksum": "942712424b94e9047a26bb26519c6bfb"
+      "checksum": "fbea25fe82a9d0ada3f7b1587c75ddf6"
     },
     "R/utils_validation.R": {
       "checksum": "25ea1c115d3b2ba92f2aa6f00308d2f7"
