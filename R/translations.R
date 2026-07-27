@@ -72,7 +72,6 @@ ui_text <- list(
       "literature on estimating means and SDs from summary statistics."
     ),
     home_tools_label = "Tools",
-    home_refs_label = "References",
 
     home_desc_se = "Convert a standard error into a standard deviation.",
     home_desc_ci = "Recover the SD from a 95% confidence interval, using t or z.",
@@ -82,7 +81,7 @@ ui_text <- list(
     home_desc_combine = "Pool two or more arms into one weighted mean and SD.",
     home_desc_split = "Divide a shared control group across several comparisons.",
     home_desc_workspace = "Collect every result, then export to CSV or XLSX.",
-    home_desc_notes = "What the app does, how to cite it, and where the code lives.",
+    home_desc_notes = "The methodological approach behind each tool, the licence, how to cite it, and the main references.",
 
     ref_cochrane = "Higgins JPT, Thomas J, Chandler J, et al., editors. Cochrane Handbook for Systematic Reviews of Interventions. Version 6.5. Cochrane; 2024.",
     ref_hozo = "Hozo SP, Djulbegovic B, Hozo I. Estimating the mean and variance from the median, range, and the size of a sample. BMC Med Res Methodol. 2005;5:13.",
@@ -244,12 +243,22 @@ ui_text <- list(
     ),
 
     notes_repo_label = "Source code",
-    notes_repo_text = "The app is open source (MIT licence). Issues and pull requests are welcome.",
+    notes_repo_text = "Issues and pull requests are welcome.",
+    notes_licence_label = "Licence",
+    notes_licence_text = paste(
+      "MIT licence, copyright Daniel Umpierre. You may use, modify, and redistribute",
+      "the software, including commercially, provided the copyright notice and licence",
+      "text are kept. It is provided without warranty: you remain responsible for",
+      "checking that a given estimate is appropriate for your data."
+    ),
     notes_citation_label = "How to cite",
     notes_citation_software = "Umpierre D. MetaPrepR: Meta-Analysis Preparation in R [software]. 2026. Available from: https://github.com/dumpierre/metaprepr",
     notes_citation_note = "Also cite the primary method you used (listed under References on the Home page), not only this software.",
     notes_preprint_label = "Methodological preprint",
     notes_preprint_text = "A methods paper describing the tool and its validation is in preparation. This entry will be replaced with the preprint DOI once it is posted.",
+
+    notes_refs_label = "References",
+    notes_refs_intro = "The sources the calculators implement. Cite the one your estimate came from, not only this software.",
 
     # -- Analytics consent ------------------------------------------------------
     consent_text = "This site uses Google Analytics (with IP anonymization) to count visits and understand usage. No personally identifying data is collected.",
@@ -286,7 +295,6 @@ ui_text <- list(
       "estimativa de médias e DPs a partir de estatísticas resumidas."
     ),
     home_tools_label = "Ferramentas",
-    home_refs_label = "Referências",
 
     home_desc_se = "Converta um erro padrão em desvio padrão.",
     home_desc_ci = "Recupere o DP a partir de um intervalo de confiança de 95%, usando t ou z.",
@@ -296,7 +304,7 @@ ui_text <- list(
     home_desc_combine = "Agrupe dois ou mais braços em uma única média ponderada e DP.",
     home_desc_split = "Divida um grupo controle compartilhado entre várias comparações.",
     home_desc_workspace = "Reúna todos os resultados e exporte para CSV ou XLSX.",
-    home_desc_notes = "O que o aplicativo faz, como citá-lo e onde está o código.",
+    home_desc_notes = "A abordagem metodológica de cada ferramenta, a licença, como citar e as principais referências.",
 
     ref_cochrane = "Higgins JPT, Thomas J, Chandler J, et al., editores. Cochrane Handbook for Systematic Reviews of Interventions. Versão 6.5. Cochrane; 2024.",
     ref_hozo = "Hozo SP, Djulbegovic B, Hozo I. Estimating the mean and variance from the median, range, and the size of a sample. BMC Med Res Methodol. 2005;5:13.",
@@ -458,12 +466,23 @@ ui_text <- list(
     ),
 
     notes_repo_label = "Código-fonte",
-    notes_repo_text = "O aplicativo é de código aberto (licença MIT). Issues e pull requests são bem-vindos.",
+    notes_repo_text = "Issues e pull requests são bem-vindos.",
+    notes_licence_label = "Licença",
+    notes_licence_text = paste(
+      "Licença MIT, direitos autorais de Daniel Umpierre. Você pode usar, modificar e",
+      "redistribuir o software, inclusive comercialmente, desde que o aviso de direitos",
+      "autorais e o texto da licença sejam mantidos. É fornecido sem garantia: a",
+      "responsabilidade de verificar se uma estimativa é adequada aos seus dados",
+      "continua sendo sua."
+    ),
     notes_citation_label = "Como citar",
     notes_citation_software = "Umpierre D. MetaPrepR: Meta-Analysis Preparation in R [software]. 2026. Disponível em: https://github.com/dumpierre/metaprepr",
     notes_citation_note = "Cite também o método primário utilizado (listado em Referências, na página inicial), não apenas este software.",
     notes_preprint_label = "Preprint metodológico",
     notes_preprint_text = "Um artigo metodológico descrevendo a ferramenta e sua validação está em preparação. Esta entrada será substituída pelo DOI do preprint assim que ele for publicado.",
+
+    notes_refs_label = "Referências",
+    notes_refs_intro = "As fontes que as calculadoras implementam. Cite aquela de onde veio a sua estimativa, não apenas este software.",
 
     # -- Consentimento de análise ------------------------------------------------
     consent_text = "Este site usa o Google Analytics (com anonimização de IP) para contar visitas e entender o uso. Nenhum dado de identificação pessoal é coletado.",

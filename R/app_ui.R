@@ -88,9 +88,8 @@ app_css <- shiny::tags$style(shiny::HTML("
             white-space:nowrap; color:#26408a; background:#eef1fb; border:1px solid #d3daf3;
             border-radius:3px; padding:.2rem .5rem; justify-self:start; }
   .mp-tool p { margin:0; font-size:.86rem; color:#3f4854; }
-  .mp-refs { margin-top:1.8rem; padding-left:1rem; border-left:2px solid #d3daf3; }
-  .mp-refs-label { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:.9rem;
-            color:#1b2430; margin-bottom:.35rem; }
+  /* Reference list, now shown on the Notes page rather than Home */
+  .mp-refs { padding-left:1rem; border-left:2px solid #d3daf3; }
   .mp-refs p { margin:.35rem 0; font-size:.78rem; color:#79828d;
             font-family:'IBM Plex Mono',monospace; line-height:1.5; }
 
@@ -267,16 +266,9 @@ home_ui <- function(lang) {
 
     shiny::div(class = "mp-group-label", t("nav_workspace")),
     tool_row(t("nav_workspace"), "home_desc_workspace", lang),
-    tool_row(t("nav_notes"), "home_desc_notes", lang),
 
-    shiny::div(
-      class = "mp-refs",
-      shiny::div(class = "mp-refs-label", t("home_refs_label")),
-      shiny::p(t("ref_cochrane")),
-      shiny::p(t("ref_hozo")),
-      shiny::p(t("ref_wan")),
-      shiny::p(t("ref_luo"))
-    )
+    shiny::div(class = "mp-group-label", t("nav_notes")),
+    tool_row(t("nav_notes"), "home_desc_notes", lang)
   )
 }
 
@@ -305,12 +297,25 @@ notes_ui <- function(lang) {
           shiny::p(shiny::tags$a(href = repo_url, target = "_blank",
                                  rel = "noopener noreferrer", repo_url)),
 
+          shiny::div(class = "mp-note-label", t("notes_licence_label")),
+          shiny::p(t("notes_licence_text")),
+
           shiny::div(class = "mp-note-label", t("notes_citation_label")),
           shiny::div(class = "mp-cite", t("notes_citation_software")),
           shiny::p(class = "mt-2", t("notes_citation_note")),
 
           shiny::div(class = "mp-note-label", t("notes_preprint_label")),
-          shiny::p(t("notes_preprint_text"))
+          shiny::p(t("notes_preprint_text")),
+
+          shiny::div(class = "mp-note-label", t("notes_refs_label")),
+          shiny::p(t("notes_refs_intro")),
+          shiny::div(
+            class = "mp-refs",
+            shiny::p(t("ref_cochrane")),
+            shiny::p(t("ref_hozo")),
+            shiny::p(t("ref_wan")),
+            shiny::p(t("ref_luo"))
+          )
         )
       )
     )
